@@ -1,0 +1,1375 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="一卷永远画不完的水墨山水长卷：山、树、舟、诗、四季昼夜与古琴声，全部由代码实时生成，山脊线就是琴谱。">
+<title>无尽江山</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Serif+SC:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --desk:#16110d; --desk-hi:#221a13; --silk:#e5dbc1; --silk-dim:#a99d82;
+  --seal:#b3322b; --seal-hi:#c9443a; --line:rgba(229,219,193,.24); --sheet-ink:#26211b;
+  color-scheme:dark;
+}
+html,body{height:100%}
+body{margin:0;background:radial-gradient(120% 90% at 50% 40%,var(--desk-hi),var(--desk));color:var(--silk);
+  font-family:"Noto Serif SC","Songti SC","STSong","SimSun",serif;overflow:hidden;-webkit-font-smoothing:antialiased}
+#app{height:100%;display:flex;flex-direction:column}
+header{display:flex;align-items:center;justify-content:space-between;gap:6px 16px;flex-wrap:wrap;padding:10px 16px 4px}
+.brand{display:flex;align-items:baseline;gap:12px}
+.brand h1{margin:0;font-family:"Ma Shan Zheng","Kaiti SC","STKaiti","KaiTi",serif;font-weight:400;font-size:28px;letter-spacing:.1em;line-height:1.1}
+.juan{font-size:12px;color:var(--silk-dim);letter-spacing:.18em;font-variant-numeric:tabular-nums}
+#status{font-size:13px;color:var(--silk-dim);letter-spacing:.1em;font-variant-numeric:tabular-nums}
+#status b{color:var(--silk);font-weight:600}
+#stage{flex:1;position:relative;min-height:0}
+#cv{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:grab;display:block}
+#cv:active{cursor:grabbing}
+#hint{position:absolute;left:50%;bottom:calc(12px + 4%);transform:translateX(-50%);pointer-events:none;
+  font-size:13px;letter-spacing:.2em;color:#f3ecda;background:rgba(22,17,13,.62);padding:6px 14px;border-radius:2px;
+  white-space:nowrap;transition:opacity 1.2s}
+#hint.gone{opacity:0}
+footer{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;align-items:center;padding:6px 16px calc(12px + env(safe-area-inset-bottom,0px))}
+button{font:inherit;font-size:14px;letter-spacing:.14em;color:var(--silk);background:transparent;border:1px solid var(--line);
+  border-radius:2px;padding:6px 12px;cursor:pointer;transition:border-color .2s,background .2s}
+button:hover{border-color:rgba(229,219,193,.6)}
+button:focus-visible{outline:2px solid var(--seal-hi);outline-offset:2px}
+button[aria-pressed="true"]{background:var(--seal);border-color:var(--seal);color:#f8f0de}
+#bSound{border-color:var(--seal-hi);position:relative}
+#bSound::after{content:"";position:absolute;right:-3px;top:-3px;width:7px;height:7px;border-radius:50%;background:var(--seal-hi);animation:ping 2s infinite}
+#bSound.used::after{display:none}
+@keyframes ping{0%{box-shadow:0 0 0 0 rgba(201,68,58,.7)}70%{box-shadow:0 0 0 9px rgba(201,68,58,0)}100%{box-shadow:0 0 0 0 rgba(201,68,58,0)}}
+.seasons{display:flex}
+.seasons button{border-radius:0;padding:6px 10px}
+.seasons button+button{margin-left:-1px}
+.seasons button:first-child{border-radius:2px 0 0 2px}
+.seasons button:last-child{border-radius:0 2px 2px 0}
+#help{position:fixed;inset:0;background:rgba(12,9,7,.72);display:flex;align-items:center;justify-content:center;padding:16px;z-index:5}
+#help[hidden]{display:none!important}
+.sheet{background:#ebe2ca;color:var(--sheet-ink);max-width:36rem;width:100%;max-height:100%;overflow:auto;padding:28px 28px 22px;border-radius:2px;
+  box-shadow:0 20px 60px rgba(0,0,0,.5);border-top:6px solid #9da391;border-bottom:6px solid #9da391}
+.sheet h2{font-family:"Ma Shan Zheng","Kaiti SC","STKaiti","KaiTi",serif;font-weight:400;font-size:34px;margin:0 0 10px;letter-spacing:.12em}
+.sheet h3{font-size:15px;margin:20px 0 6px;letter-spacing:.2em;color:#8e2a24}
+.sheet p,.sheet li{font-size:14.5px;line-height:1.85;margin:0 0 8px}
+.sheet ul{padding-left:1.2em;margin:0}
+.sheet blockquote{margin:0 0 12px;padding:10px 14px;border-left:3px solid var(--seal);background:rgba(179,50,43,.06);
+  font-family:"Ma Shan Zheng","Kaiti SC","STKaiti","KaiTi",serif;font-size:19px;line-height:1.7}
+.sheet cite{display:block;font-family:"Noto Serif SC",serif;font-style:normal;font-size:12.5px;color:#6b6152;margin-top:4px}
+.sheet .row{display:flex;justify-content:flex-end;margin-top:16px}
+.sheet button{color:#f8f0de;background:var(--seal);border-color:var(--seal)}
+@media (max-width:560px){
+  .brand h1{font-size:23px}
+  #status{font-size:12px;letter-spacing:.04em}
+  button{font-size:13px;padding:6px 9px;letter-spacing:.08em}
+  .seasons button{padding:6px 8px}
+  #hint{font-size:12px;letter-spacing:.1em}
+}
+</style>
+</head>
+<body>
+
+<div id="app">
+  <header>
+    <div class="brand"><h1>无尽江山</h1><span class="juan" id="juan">第 · 卷</span></div>
+    <div id="status" aria-live="off"></div>
+  </header>
+  <main id="stage">
+    <canvas id="cv" aria-label="一卷可以无限展开的山水长卷，每一笔都由代码实时绘制"></canvas>
+    <div id="hint">拖动画卷 · 点天空、水面、山林试试</div>
+  </main>
+  <footer>
+    <button id="bPlay" aria-pressed="true">展卷中</button>
+    <button id="bSpeed">行速·中</button>
+    <button id="bSound">听琴</button>
+    <div class="seasons" role="group" aria-label="跳到某个季节">
+      <button data-s="0">春</button><button data-s="1">夏</button><button data-s="2">秋</button><button data-s="3">冬</button>
+    </div>
+    <button id="bNew">换一卷</button>
+    <button id="bHelp">说明</button>
+  </footer>
+</div>
+
+<div id="help" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="helpT">
+    <h2 id="helpT">卧游</h2>
+    <blockquote>老疾俱至，名山恐难遍睹，唯当澄怀观道，卧以游之。<cite>——《宋书·宗炳传》</cite></blockquote>
+    <p>这是一卷永远画不完的山水。里面没有一张图片，也没有一段录音：每一道山脊、每一笔皴擦、每一棵松、每一叶小舟、每一声琴，都是代码在你眼前现算出来的。卷号不同，江山就不同；走得再远，也不会重复。</p>
+    <h3>怎么玩</h3>
+    <ul>
+      <li>拖动或滚动：展卷、回看。按古法，手卷自右向左展开。</li>
+      <li>点天空：放出仙鹤。点水面：锦鲤跃出。点山林：惊起飞鸟。</li>
+      <li>空格键暂停，← → 键前后移动。</li>
+    </ul>
+    <h3>听琴</h3>
+    <p>打开「听琴」，小船就成了唱针。船上竖起的那道细线，把身后山脊的高低实时读成古琴旋律：山势上扬，琴音就往上走；拖得越快，曲子越快；往回拖，曲子就倒着弹。</p>
+    <p>古琴有三种音色，泛音象天，散音象地，按音象人。这里低处的节拍用散音，山脊旋律用带滑音和吟猱的按音，仙鹤与题诗用泛音。经过山寺古塔，会听到一声钟。</p>
+    <p>四季换调，依《礼记·月令》：春「其音角」，夏「其音徵」，秋「其音商」，冬「其音羽」。</p>
+    <h3>画里有什么</h3>
+    <p>二十四节气和十二时辰随行程流转：日出日落，月升星现，入夜人家点灯。春有桃花与青绿山色，夏有荷叶与骤雨，秋有红枫与赭石，冬有雪和红梅。沿途题诗都出自唐宋名篇，按季节与时辰挑选。</p>
+    <div class="row"><button id="bClose">收起</button></div>
+  </div>
+</div>
+
+<script>
+(() => {
+'use strict';
+const $ = s => document.querySelector(s);
+const cv = $('#cv'), ctx = cv.getContext('2d');
+const stage = $('#stage');
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const TAU = Math.PI * 2;
+
+/* ---------------- random & noise ---------------- */
+let SEED = 1;
+function hash(a, b, c, d) {
+  let h = Math.imul(SEED | 0, 0x9E3779B1) ^ 0x85ebca6b;
+  h = Math.imul(h ^ (a | 0), 0xcc9e2d51); h = (h << 15) | (h >>> 17);
+  h = Math.imul(h ^ (b | 0), 0x1b873593); h = (h << 13) | (h >>> 19);
+  h = Math.imul(h ^ (c | 0), 0xe6546b64); h ^= h >>> 16;
+  h = Math.imul(h ^ (d | 0), 0x85ebca6b); h ^= h >>> 13;
+  h = Math.imul(h, 0xc2b2ae35); h ^= h >>> 16;
+  return h >>> 0;
+}
+function mulberry(a) {
+  return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+}
+const rng = (a, b, c, d) => mulberry(hash(a, b, c, d));
+const h01 = (i, s) => hash(i, s, 77, 3) / 4294967296;
+function vnoise(x, s) { const i = Math.floor(x), f = x - i, t = f * f * (3 - 2 * f); const a = h01(i, s), b = h01(i + 1, s); return a + (b - a) * t; }
+function fbm(x, s, o = 4) { let v = 0, a = .5, f = 1, n = 0; for (let q = 0; q < o; q++) { v += a * vnoise(x * f + q * 17.3, s + q * 101); n += a; a *= .5; f *= 2.07; } return v / n; }
+const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
+const lerp = (a, b, t) => a + (b - a) * t;
+const sstep = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
+const fract = x => x - Math.floor(x);
+const mod = (a, n) => ((a % n) + n) % n;
+
+/* ---------------- constants ---------------- */
+const paperA = a => `rgba(229,219,193,${a})`;
+const INK = '#1f1d1b';
+const CW = 420;
+const DAY = 6000, SEASON = 12000, YEAR = 48000, J_OFF = 7500;
+const SEASONS = '春夏秋冬';
+const MODES = [{ n: '角', d: 2 }, { n: '徵', d: 3 }, { n: '商', d: 1 }, { n: '羽', d: 4 }];
+const TERMS = [['立春','雨水','惊蛰','春分','清明','谷雨'],['立夏','小满','芒种','夏至','小暑','大暑'],
+  ['立秋','处暑','白露','秋分','寒露','霜降'],['立冬','小雪','大雪','冬至','小寒','大寒']];
+const SHICHEN = '子丑寅卯辰巳午未申酉戌亥';
+const BRUSH = '"Ma Shan Zheng","Kaiti SC","STKaiti","KaiTi",serif';
+
+let W = 0, H = 0, DPR = 1, k = 1, Wu = 1, SY0 = 0, SY1 = 0, PAD = 12;
+let V = 0, vel = 0, auto = !reduce, speedIdx = 1;
+const SPEEDS = [22, 46, 130], SPEEDN = ['缓', '中', '疾'];
+let time = 0, lastInteract = -10, frameStart = 0, forceRender = 2;
+let T_PANEL = 400, POEM_OFF = 600;
+let fade = 0, fadeDir = 0, fadeCb = null;
+
+/* ---------------- world time ---------------- */
+const seasonIdx = J => Math.floor(mod(J + J_OFF, YEAR) / SEASON);
+const termOf = J => TERMS[seasonIdx(J)][Math.floor(mod(J + J_OFF, SEASON) / 2000)];
+const todOf = J => fract((J + .4 * DAY) / DAY);
+function light(J) {
+  const t = todOf(J), sr = .2, ss = .8, w = .045;
+  const day = sstep(sr - w, sr + w, t) * (1 - sstep(ss - w, ss + w, t));
+  return { t, day, night: 1 - day, dusk: Math.max(0, 1 - Math.abs(t - ss) / .07), dawn: Math.max(0, 1 - Math.abs(t - sr) / .06) };
+}
+function rainAt(J) { const s = seasonIdx(J); const f = [0.8, 1, .35, 0][s]; return f * sstep(.6, .72, fbm(J / 3600, 777, 2)); }
+function snowAt(J) { return seasonIdx(J) === 3 ? .3 + .7 * sstep(.4, .68, fbm(J / 3000, 555, 2)) : 0; }
+const Jc = () => -(V + Wu / 2);
+const layerJ = (L, lx) => -((lx - Wu / 2) / L.p + Wu / 2);
+const nightAtX = ux => light(-(V + ux)).night;
+
+/* ---------------- layers ---------------- */
+const FAR = { ink: '#50606f', shadeA: .085, shadeN: 14, depthF: .6, depthMax: 200, sideA: .035, mist: .42, baseExt: 12, color: true, colorA: .9, snow: true,
+  tex: .3, texLen: 12, texA: .5, texW: .8, texArea: 900, texMax: 80, olW: .9, olA: .3, moss: 0, creases: false, rock: false };
+const MID = { ink: '#2a2826', shadeA: .068, shadeN: 24, depthF: .42, depthMax: 150, sideA: .045, mist: .6, baseExt: 12, color: true, colorA: 1, snow: true,
+  tex: 1, texLen: 22, texA: 1, texW: 1, texArea: 800, texMax: 260, olW: 1.9, olA: .85, moss: 1, creases: true, rock: false };
+const ROCK = { ink: '#1d1b19', shadeA: .09, shadeN: 18, depthF: .55, depthMax: 100, sideA: .06, mist: .94, baseExt: 4, color: true, colorA: .75, snow: true,
+  tex: 1.3, texLen: 13, texA: 1.3, texW: 1.2, texArea: 500, texMax: 200, olW: 2.8, olA: .9, moss: 1.4, creases: true, rock: true };
+const LAYERS = [
+  { id: 0, p: .2, y0: 40, y1: 720, res: .55, sp: 230, wMin: 320, wMax: 820, hMin: 110, hMax: 460, base: 700, reg: 2600, mistY: 560, drift: 3 },
+  { id: 1, p: .48, y0: 30, y1: 830, res: 1, sp: 270, wMin: 240, wMax: 640, hMin: 130, hMax: 640, base: 800, reg: 2000, mistY: 690, drift: 6 },
+  { id: 2, p: 1, y0: 330, y1: 1000, res: 1, sp: 500 }
+];
+LAYERS.forEach(L => { L.objs = new Map(); L.chunks = new Map(); L.extra = new Map(); });
+
+/* ---------------- geometry ---------------- */
+function genRidge(r, cx, w, h, base, step, opt) {
+  const n = Math.max(3, Math.ceil(w / step) + 1), x0 = cx - w / 2, ys = new Float32Array(n);
+  const { karst, rock, salt } = opt, bumps = [];
+  for (let j = 0; j < opt.nb; j++) bumps.push({ c: j === 0 ? (r() - .5) * .5 : (r() * 2 - 1) * .7,
+    s: karst ? .22 + .14 * r() : rock ? .25 + .3 * r() : .16 + .3 * r(), a: j === 0 ? 1 : .3 + .55 * r() });
+  const pl = opt.plateau || 1; let top = base, peakX = cx;
+  for (let p = 0; p < n; p++) {
+    const xx = x0 + p * step, t = (xx - cx) / (w / 2);
+    const e = Math.pow(Math.max(0, 1 - t * t), karst ? .35 : .6);
+    let f = 0;
+    for (const b of bumps) { const u = Math.abs((t - b.c) / b.s);
+      const sh = karst ? Math.exp(-Math.pow(u, 2.6)) : rock ? Math.max(0, 1 - Math.pow(u, 1.25)) : Math.exp(-u * u); f = Math.max(f, b.a * sh); }
+    const d = (fbm(xx / (rock ? 38 : 58), salt, 3) - .5) * (rock ? .5 : .38) + (vnoise(xx / (rock ? 9 : 13), salt + 9) - .5) * (rock ? .16 : .1);
+    let v = (f + d * (.35 + .65 * f)) * e;
+    if (pl < 1 && v > pl) v = pl + (v - pl) * .12;
+    v = Math.max(0, v);
+    const y = base - h * v; ys[p] = y; if (y < top) { top = y; peakX = xx; }
+  }
+  return { x0, step, ys, base, top, peakX, w, n };
+}
+function ridgeY(P, xx) { const f = (xx - P.x0) / P.step; if (f < 0 || f > P.n - 1) return Infinity; const i = Math.floor(f), t = f - i; return i >= P.n - 1 ? P.ys[P.n - 1] : P.ys[i] * (1 - t) + P.ys[i + 1] * t; }
+
+function genMountain(L, i) {
+  if (L.objs.has(i)) return L.objs.get(i);
+  const r = rng(L.id, i, 11);
+  const cx = i * L.sp + (r() - .5) * L.sp * .7;
+  const reg = fbm(cx / L.reg, 50 + L.id, 3);
+  let o = null;
+  if (reg > (L.id === 0 ? .2 : .36) || r() < .25) {
+    const amp = sstep(.3, .7, reg);
+    const karst = r() < (L.id === 1 ? .3 : .12);
+    const w = lerp(L.wMin, L.wMax, r()) * (karst ? .6 : 1);
+    const h = (L.hMin + (L.hMax - L.hMin) * (.3 + .7 * amp) * (.45 + .55 * r())) * (karst ? 1.12 : 1);
+    const step = L.id === 0 ? 4 : 3, salt = hash(L.id, i, 5, 0) % 100000;
+    const parts = [genRidge(r, cx, w, h, L.base, step, { karst, nb: karst ? 1 + (r() < .5 ? 1 : 0) : 2 + Math.floor(r() * 3), salt })];
+    const nf = karst ? Math.floor(r() * 2) + (r() < .5 ? 1 : 0) : 1 + Math.floor(r() * 2);
+    for (let f = 0; f < nf; f++) {
+      const fw = w * (.35 + .3 * r()), fcx = cx + (r() * 2 - 1) * w * .4;
+      parts.push(genRidge(r, fcx, fw, h * (.22 + .28 * r()), L.base + 8 + f * 6, step, { karst: karst && r() < .6, nb: 1 + Math.floor(r() * 2), salt: salt + 37 * (f + 1) }));
+    }
+    let x0 = Infinity, x1 = -Infinity, top = Infinity;
+    for (const P of parts) { x0 = Math.min(x0, P.x0); x1 = Math.max(x1, P.x0 + (P.n - 1) * P.step); top = Math.min(top, P.top); }
+    const season = seasonIdx(layerJ(L, cx) + (r() - .5) * 1800);
+    o = { i, cx, parts, x0, x1, top, season, karst, h, lights: [] };
+    const main = parts[0];
+    if (L.id === 1) {
+      if (h > 330 && r() < .16) { o.pagoda = { x: main.peakX, y: main.top + 3, s: .8 + r() * .4, tiers: 5 + Math.floor(r() * 3) }; o.lights.push({ x: main.peakX, y: main.top - 12, r: 5 }); }
+      else if (r() < .14) { const tx = cx + (r() - .5) * w * .4, ty = ridgeY(main, tx);
+        if (isFinite(ty)) { o.temple = { x: tx, y: ty + (L.base - ty) * .28, s: .8 + .3 * r() }; o.lights.push({ x: tx - 4, y: o.temple.y - 5, r: 4 }); } }
+      if (!karst && r() < .2) { const wx = main.peakX + (r() < .5 ? -1 : 1) * w * (.07 + .1 * r()), wy = ridgeY(main, wx);
+        if (isFinite(wy) && L.base - wy > 220) o.fall = { x: wx, y0: wy + 22, y1: L.base - 70, w: 7 + r() * 6 }; }
+    }
+    o.x1 = Math.max(o.x1, o.x0 + 1);
+  }
+  if (L.objs.size > 4000) L.objs.clear();
+  L.objs.set(i, o); return o;
+}
+function eachMountain(L, X0, X1, cb) {
+  const R = L.wMax * .8 + L.sp;
+  const a = Math.floor((X0 - R) / L.sp) - 1, b = Math.ceil((X1 + R) / L.sp) + 1;
+  for (let i = a; i <= b; i++) { const o = genMountain(L, i); if (o && o.x1 > X0 - 30 && o.x0 < X1 + 30) cb(o); }
+}
+function ridgeAt(L, lx) {
+  let y = Infinity;
+  eachMountain(L, lx, lx, o => { for (const P of o.parts) { const v = ridgeY(P, lx); if (v < y) y = v; } });
+  return y;
+}
+
+const SH_SP = 500;
+function pickKind(s, v) {
+  switch (s) {
+    case 0: return v < .25 ? 'pine' : v < .6 ? 'blossom' : v < .8 ? 'leafy' : 'willow';
+    case 1: return v < .25 ? 'pine' : v < .8 ? 'leafy' : 'willow';
+    case 2: return v < .25 ? 'pine' : v < .8 ? 'maple' : 'willow';
+    default: return v < .4 ? 'pine' : v < .82 ? 'bare' : 'plum';
+  }
+}
+function genShore(i) {
+  const L = LAYERS[2];
+  if (L.objs.has(i)) return L.objs.get(i);
+  const r = rng(2, i, 21);
+  const cx = i * SH_SP + (r() - .5) * 220;
+  const pres = fbm(cx / 2300, 301, 3);
+  let o = null;
+  if (pres > .44 || r() < .12) {
+    const w = 190 + r() * 460, h = (45 + r() * 190) * (.55 + pres * .9);
+    const plateau = r() < .55 ? .5 + r() * .35 : 1;
+    const P = genRidge(r, cx, w, h, 800, 3, { rock: true, nb: 1 + Math.floor(r() * 3), plateau, salt: hash(2, i, 3, 0) % 100000 });
+    const season = seasonIdx(layerJ(L, cx) + (r() - .5) * 1400);
+    o = { i, cx, P, season, items: [], lights: [], reeds: [], x0: P.x0 - 90, x1: P.x0 + P.w + 90 };
+    let bestA = 0, bestB = -1, a = -1;
+    for (let p = 0; p < P.n; p++) { if (P.ys[p] < P.top + 6) { if (a < 0) a = p; if (p - a > bestB - bestA) { bestA = a; bestB = p; } } else a = -1; }
+    const runW = (bestB - bestA) * P.step, blocks = [];
+    if (runW > 40 && r() < .55 && 800 - P.top > 40) {
+      const nh = 1 + Math.floor(r() * Math.min(3, runW / 42));
+      for (let q = 0; q < nh; q++) { const hx = P.x0 + (bestA + (bestB - bestA) * (q + .5) / nh) * P.step, hy = ridgeY(P, hx) + 3, s = .8 + .3 * r();
+        o.items.push({ t: 'house', x: hx, y: hy, s, thatch: r() < .5 }); o.lights.push({ x: hx - 36 * s * .24, y: hy - 16 * s * .55, r: 4 }); blocks.push(hx); }
+    } else if (r() < .4 && 800 - P.top > 50) {
+      const s = .9 + .3 * r(); o.items.push({ t: 'pav', x: P.peakX, y: P.top + 3, s }); o.lights.push({ x: P.peakX, y: P.top - 20 * s, r: 5 }); blocks.push(P.peakX);
+    }
+    const nT = Math.floor(w / 75 * (.5 + r() * .9));
+    for (let q = 0; q < nT; q++) {
+      const tx = P.x0 + 15 + r() * (w - 30), kv = r(), sv = r();
+      if (blocks.some(b => Math.abs(b - tx) < 30)) continue;
+      const ty = ridgeY(P, tx) + 4; if (!isFinite(ty) || ty > 796) continue;
+      o.items.push({ t: 'tree', kind: pickKind(season, kv), x: tx, y: ty, s: (70 + sv * 80) * (ty < P.top + 40 ? 1 : .85), seed: hash(2, i, 100 + q, 1) });
+    }
+    if (r() < .75) o.reeds.push({ x: P.x0 + 8 + r() * 20, n: 6 + Math.floor(r() * 8) });
+    if (r() < .75) o.reeds.push({ x: P.x0 + w - 8 - r() * 20, n: 6 + Math.floor(r() * 8) });
+  }
+  if (L.objs.size > 3000) L.objs.clear();
+  L.objs.set(i, o); return o;
+}
+function eachShore(X0, X1, cb) {
+  const a = Math.floor((X0 - 520) / SH_SP) - 1, b = Math.ceil((X1 + 520) / SH_SP) + 1;
+  for (let i = a; i <= b; i++) { const o = genShore(i); if (o && o.x1 > X0 && o.x0 < X1) cb(o); }
+}
+function shoreAt(xx) { let y = Infinity; eachShore(xx, xx, o => { const v = ridgeY(o.P, xx); if (v < y) y = v; }); return y; }
+function genLotus(i) {
+  const L = LAYERS[2]; if (L.extra.has(i)) return L.extra.get(i);
+  const r = rng(4, i, 3); const cx = i * 650 + r() * 300; let o = null;
+  if (seasonIdx(layerJ(L, cx)) === 1 && r() < .6) {
+    const y0 = 815 + r() * 25, span = 120 + r() * 160, leaves = [], flowers = [];
+    const nl = 10 + Math.floor(r() * 14);
+    for (let q = 0; q < nl; q++) { const t = r(); leaves.push({ x: cx + (r() - .5) * span, y: y0 + t * 55, rx: 8 + t * 10 + r() * 4, a: (r() - .5) * .3 }); }
+    const nfl = 2 + Math.floor(r() * 4);
+    for (let q = 0; q < nfl; q++) { const t = r(); flowers.push({ x: cx + (r() - .5) * span * .8, y: y0 + t * 50, h: 10 + r() * 16, s: .8 + t * .6 }); }
+    o = { cx, leaves, flowers, x0: cx - span / 2 - 30, x1: cx + span / 2 + 30 };
+  }
+  L.extra.set(i, o); return o;
+}
+
+/* ---------------- ink painting primitives (chunk space = world units) ---------------- */
+function washGrad(x, top, base, s) {
+  const g = x.createLinearGradient(0, top, 0, base);
+  if (s === 0) { g.addColorStop(0, 'rgba(62,112,146,.55)'); g.addColorStop(.35, 'rgba(96,156,116,.5)'); g.addColorStop(.75, 'rgba(176,122,70,.16)'); g.addColorStop(1, 'rgba(176,122,70,0)'); }
+  else if (s === 1) { g.addColorStop(0, 'rgba(40,92,140,.8)'); g.addColorStop(.4, 'rgba(62,140,100,.72)'); g.addColorStop(.8, 'rgba(160,110,60,.2)'); g.addColorStop(1, 'rgba(160,110,60,0)'); }
+  else { g.addColorStop(0, 'rgba(176,102,52,.6)'); g.addColorStop(.45, 'rgba(196,122,58,.42)'); g.addColorStop(1, 'rgba(196,122,58,0)'); }
+  return g;
+}
+function drawPart(x, P, st, r, X0, X1, season) {
+  const { x0, step, ys, base, top, n } = P, h = base - top;
+  if (h < 4 || x0 + P.w < X0 - 60 || x0 > X1 + 60) return;
+  const pa = clamp(Math.floor((X0 - 40 - x0) / step), 0, n - 1), pb = clamp(Math.ceil((X1 + 40 - x0) / step), 0, n - 1);
+  const ext = st.baseExt, xa = x0 + pa * step, xb = x0 + pb * step;
+  const poly = new Path2D(); poly.moveTo(xa, base + ext);
+  for (let p = pa; p <= pb; p++) poly.lineTo(x0 + p * step, ys[p]);
+  poly.lineTo(xb, base + ext); poly.closePath();
+  const g = x.createLinearGradient(0, top, 0, base + ext);
+  g.addColorStop(0, paperA(1)); g.addColorStop(st.mist, paperA(1)); g.addColorStop(1, paperA(0));
+  x.fillStyle = g; x.fill(poly);
+  x.save(); x.clip(poly);
+  const depth = Math.min(h * st.depthF, st.depthMax), N = st.shadeN, dy = depth / N, sk = Math.max(1, Math.round(4 / step));
+  x.strokeStyle = st.ink; x.lineJoin = 'round'; x.lineCap = 'round'; x.lineWidth = dy * 2.4;
+  for (let j = 0; j < N; j++) {
+    x.globalAlpha = st.shadeA * Math.pow(1 - j / N, 1.6); x.beginPath();
+    for (let p = pa; p <= pb; p += sk) { const yy = ys[p] + j * dy; if (p === pa) x.moveTo(x0 + p * step, yy); else x.lineTo(x0 + p * step, yy); }
+    x.stroke();
+  }
+  const sd = depth * 1.7, M = 10; x.lineWidth = sd / M * 2.2;
+  for (let j = 0; j < M; j++) {
+    x.globalAlpha = st.sideA * (1 - j / M); x.beginPath(); let pen = false;
+    for (let p = Math.max(pa, 3); p <= Math.min(pb, n - 4); p++) {
+      const sl = ys[p + 3] - ys[p - 3];
+      if (sl > step * 1.4) { const yy = ys[p] + j * sd / M; if (!pen) { x.moveTo(x0 + p * step, yy); pen = true; } else x.lineTo(x0 + p * step, yy); } else pen = false;
+    }
+    x.stroke();
+  }
+  if (st.color && season !== 3) {
+    x.globalCompositeOperation = 'multiply'; x.globalAlpha = st.colorA;
+    x.fillStyle = washGrad(x, top, base, season); x.fillRect(xa, top - 4, xb - xa, base - top + ext + 4);
+    x.globalCompositeOperation = 'source-over';
+  }
+  if (season === 3 && st.snow) {
+    const sdp = Math.min(h * .45, 120), S = 12; x.strokeStyle = '#f7f4ee'; x.lineWidth = sdp / S * 2.2;
+    for (let j = 0; j < S; j++) {
+      x.globalAlpha = .36 * (1 - j / S); x.beginPath();
+      for (let p = pa; p <= pb; p += sk) { const yy = ys[p] + 2.5 + j * sdp / S; if (p === pa) x.moveTo(x0 + p * step, yy); else x.lineTo(x0 + p * step, yy); }
+      x.stroke();
+    }
+  }
+  if (st.creases) {
+    const win = Math.max(3, Math.round(24 / step));
+    for (let p = win; p < n - win; p += 2) {
+      let isV = true, lm = Infinity, rm = Infinity;
+      for (let q = p - win; q <= p + win; q++) { if (ys[q] > ys[p]) { isV = false; break; } if (q < p) lm = Math.min(lm, ys[q]); else if (q > p) rm = Math.min(rm, ys[q]); }
+      if (!isV || ys[p] - lm < 10 || ys[p] - rm < 10 || base - ys[p] < 30) continue;
+      const len = Math.min(base - ys[p], h) * (.25 + .35 * r()), dir = r() < .5 ? -1 : 1;
+      let cx = x0 + p * step, cy = ys[p]; const pts = [[cx, cy]];
+      for (let s = 1; s <= 6; s++) { cx += dir * len * .06 + (r() - .5) * len * .05; cy += len / 6; pts.push([cx, cy]); }
+      p += win;
+      if (pts[0][0] < X0 - 60 || pts[0][0] > X1 + 60) continue;
+      for (let j = 0; j < 4; j++) {
+        x.globalAlpha = .06; x.lineWidth = 4 + j * 4; x.beginPath();
+        pts.forEach((q, s) => { const xx = q[0] - dir * (3 + j * 3.5) * (1 - s / 7); if (s) x.lineTo(xx, q[1]); else x.moveTo(xx, q[1]); }); x.stroke();
+      }
+      x.globalAlpha = .55;
+      for (let s = 1; s < pts.length; s++) { x.lineWidth = lerp(1.8, .3, s / 6) * st.olW / 1.9; x.beginPath(); x.moveTo(pts[s - 1][0], pts[s - 1][1]); x.lineTo(pts[s][0], pts[s][1]); x.stroke(); }
+    }
+  }
+  const nt = Math.min(st.texMax, Math.floor(P.w * h / st.texArea * st.tex * (season === 3 ? .5 : 1)));
+  const bk = [new Path2D(), new Path2D(), new Path2D()];
+  for (let q = 0; q < nt; q++) {
+    const p = Math.floor(r() * n), yr = ys[p], fr = Math.pow(r(), 1.7), len = st.texLen * (.5 + r()), b = Math.floor(r() * 3), cc = (r() - .5), wv = r();
+    const xs = x0 + p * step; if (xs < X0 - 50 || xs > X1 + 50 || base - yr < 6) continue;
+    const y0 = yr + 2 + fr * (base - yr) * .75;
+    const sl = (ys[Math.min(n - 1, p + 3)] - ys[Math.max(0, p - 3)]) / (6 * step);
+    if (st.rock) {
+      const ang = sl > 0 ? 1.05 + cc * .4 : 2.1 + cc * .4, wd = len * (.28 + wv * .2);
+      const ex = xs + Math.cos(ang) * len, ey = y0 + Math.sin(ang) * len;
+      bk[b].moveTo(xs, y0); bk[b].lineTo(ex, ey); bk[b].lineTo(ex + Math.cos(ang + 1.9) * wd, ey + Math.sin(ang + 1.9) * wd * .4); bk[b].closePath();
+    } else {
+      const dx = Math.sign(sl || 1) * len * .4 * Math.min(1, Math.abs(sl) * 2 + .2);
+      bk[b].moveTo(xs, y0); bk[b].quadraticCurveTo(xs + dx / 2 + cc * len * .5, y0 + len / 2, xs + dx, y0 + len);
+    }
+  }
+  const al = [.12, .2, .3], lw = [.6, .9, 1.3];
+  for (let b = 0; b < 3; b++) { x.globalAlpha = Math.min(1, al[b] * st.texA);
+    if (st.rock) { x.fillStyle = st.ink; x.fill(bk[b]); } else { x.lineWidth = lw[b] * st.texW; x.stroke(bk[b]); } }
+  x.restore();
+  // brush outline with variable width and dry-brush gaps
+  x.globalAlpha = st.olA; x.fillStyle = st.ink; const salt = (x0 * 7) | 0;
+  x.beginPath(); const up = [], dn = [];
+  const flush = () => { if (up.length > 4) { x.moveTo(up[0], up[1]); for (let q = 2; q < up.length; q += 2) x.lineTo(up[q], up[q + 1]);
+      for (let q = dn.length - 2; q >= 0; q -= 2) x.lineTo(dn[q], dn[q + 1]); x.closePath(); } up.length = 0; dn.length = 0; };
+  for (let p = pa; p <= pb; p++) {
+    const xx = x0 + p * step;
+    if (base - ys[p] < 4 || vnoise(xx / 47, salt) < .2) { flush(); continue; }
+    const w = st.olW * (.35 + 1.3 * vnoise(xx / 26, salt + 3)); up.push(xx, ys[p] - w * .5); dn.push(xx, ys[p] + w * .5);
+  }
+  flush(); x.fill();
+  if (st.moss) {
+    const nm = Math.floor(n / 10 * st.moss); x.globalAlpha = .82; x.beginPath();
+    for (let q = 0; q < nm; q++) { const p = Math.floor(r() * n), a1 = r(), a2 = r(); const yy = ys[p];
+      if (yy > top + h * .65) continue; const xx = x0 + p * step + (a1 - .5) * 4; if (xx < X0 - 10 || xx > X1 + 10) continue;
+      const rr = .8 + a2 * 1.5; x.moveTo(xx + rr * 1.3, yy + a1 * 4); x.ellipse(xx, yy + a1 * 4, rr * 1.3, rr, 0, 0, TAU); }
+    x.fill();
+  }
+  x.globalAlpha = 1;
+}
+function drawTinyTrees(x, P, r, season, X0, X1) {
+  const { x0, step, ys, n, base, top } = P; if (base - top < 60) return;
+  const nc = 1 + Math.floor(r() * Math.max(1, P.w / 140));
+  x.lineCap = 'round';
+  for (let c = 0; c < nc; c++) {
+    const p0 = Math.floor(r() * n), cnt = 3 + Math.floor(r() * 6), sp = 2 + Math.floor(r() * 3), sz = .8 + r() * .5;
+    for (let j = 0; j < cnt; j++) {
+      const p = p0 + j * sp, a1 = r(), a2 = r(), a3 = r(); if (p >= n) continue;
+      const tx = x0 + p * step, ty = ys[p] + 1 + a1 * 3; if (ty > base - 25 || tx < X0 - 10 || tx > X1 + 10) continue;
+      const th = (5 + a2 * 8) * sz;
+      x.strokeStyle = '#2a2622'; x.globalAlpha = .8; x.lineWidth = .7; x.beginPath(); x.moveTo(tx, ty); x.lineTo(tx, ty - th); x.stroke();
+      if (season === 3) { x.beginPath(); x.moveTo(tx, ty - th * .5); x.lineTo(tx - th * .3, ty - th * .9); x.moveTo(tx, ty - th * .6); x.lineTo(tx + th * .3, ty - th); x.stroke(); continue; }
+      x.fillStyle = season === 0 ? (a3 < .35 ? '#e3a0a6' : '#6f9d5c') : season === 1 ? '#2d4a38' : (a3 < .5 ? '#b2432f' : a3 < .8 ? '#cf843a' : '#8a3a2a');
+      x.globalAlpha = .88; x.beginPath(); x.ellipse(tx, ty - th * .8, th * .32, th * .45, 0, 0, TAU); x.fill();
+    }
+  }
+  x.globalAlpha = 1;
+}
+function drawFall(x, f) {
+  const g = x.createLinearGradient(0, f.y0, 0, f.y1); g.addColorStop(0, paperA(1)); g.addColorStop(.75, paperA(.95)); g.addColorStop(1, paperA(0));
+  x.fillStyle = g; x.beginPath(); x.moveTo(f.x - f.w * .4, f.y0); x.lineTo(f.x + f.w * .4, f.y0); x.lineTo(f.x + f.w * .65, f.y1); x.lineTo(f.x - f.w * .65, f.y1); x.closePath(); x.fill();
+  x.strokeStyle = '#2a2826'; x.lineWidth = 1; x.globalAlpha = .55;
+  for (const sd of [-1, 1]) { x.beginPath(); for (let t = 0; t <= 1.001; t += .1) { const yy = lerp(f.y0, f.y1 - 40, t), xx = f.x + sd * f.w * lerp(.4, .6, t) + Math.sin(t * 17 + sd) * .8; if (t) x.lineTo(xx, yy); else x.moveTo(xx, yy); } x.stroke(); }
+  x.globalAlpha = .16; x.lineWidth = .5;
+  for (let j = 1; j < 4; j++) { const xx = f.x + (j / 4 - .5) * f.w; x.beginPath(); x.moveTo(xx, f.y0 + 5); x.lineTo(xx + (j - 2) * 1.5, f.y1 - 50); x.stroke(); }
+  x.globalAlpha = 1;
+}
+function drawHouse(x, h, season) {
+  const { x: hx, y: hy, s } = h, w = 36 * s, wh = 16 * s, rh = 12 * s;
+  x.fillStyle = '#ede6d3'; x.fillRect(hx - w / 2, hy - wh, w, wh);
+  x.strokeStyle = INK; x.lineWidth = .8; x.strokeRect(hx - w / 2, hy - wh, w, wh);
+  x.fillStyle = '#2a2623'; x.fillRect(hx + w * .12, hy - wh * .75, w * .14, wh * .75);
+  x.strokeRect(hx - w * .34, hy - wh * .72, w * .2, wh * .35);
+  x.beginPath(); x.moveTo(hx - w / 2 - 7 * s, hy - wh + 1 * s); x.quadraticCurveTo(hx - w / 2, hy - wh - 1 * s, hx - w / 2 + 3 * s, hy - wh - rh);
+  x.lineTo(hx + w / 2 - 3 * s, hy - wh - rh); x.quadraticCurveTo(hx + w / 2, hy - wh - 1 * s, hx + w / 2 + 7 * s, hy - wh + 1 * s); x.closePath();
+  x.fillStyle = h.thatch ? '#6a5f50' : '#27231f'; x.fill();
+  if (h.thatch) { x.strokeStyle = paperA(.28); x.lineWidth = .5; x.beginPath(); for (let q = 1; q < 9; q++) { const xx = hx - w / 2 + q * w / 9; x.moveTo(xx, hy - wh - rh + 1); x.lineTo(xx - 2 * s, hy - wh); } x.stroke(); }
+  x.strokeStyle = INK; x.lineWidth = 1.6 * s; x.beginPath(); x.moveTo(hx - w / 2 + 2 * s, hy - wh - rh); x.lineTo(hx + w / 2 - 2 * s, hy - wh - rh); x.stroke();
+  if (season === 3) { x.fillStyle = '#f7f4ee'; x.beginPath(); x.moveTo(hx - w / 2 + 2 * s, hy - wh - rh - .5); x.lineTo(hx + w / 2 - 2 * s, hy - wh - rh - .5);
+    x.lineTo(hx + w / 2 + 1 * s, hy - wh - rh * .45); x.lineTo(hx - w / 2 - 1 * s, hy - wh - rh * .45); x.closePath(); x.fill(); }
+}
+function drawPav(x, p, season) {
+  const { x: px, y: py, s } = p;
+  x.fillStyle = '#ede6d3'; x.fillRect(px - 18 * s, py - 4 * s, 36 * s, 4 * s); x.strokeStyle = INK; x.lineWidth = .8; x.strokeRect(px - 18 * s, py - 4 * s, 36 * s, 4 * s);
+  x.lineWidth = 1.3 * s; x.beginPath(); x.moveTo(px - 12 * s, py - 4 * s); x.lineTo(px - 12 * s, py - 27 * s); x.moveTo(px + 12 * s, py - 4 * s); x.lineTo(px + 12 * s, py - 27 * s);
+  x.moveTo(px - 12 * s, py - 11 * s); x.lineTo(px + 12 * s, py - 11 * s); x.stroke();
+  x.fillStyle = '#23201d'; x.beginPath(); x.moveTo(px - 25 * s, py - 31 * s); x.quadraticCurveTo(px, py - 25 * s, px + 25 * s, py - 31 * s);
+  x.quadraticCurveTo(px + 8 * s, py - 32 * s, px, py - 46 * s); x.quadraticCurveTo(px - 8 * s, py - 32 * s, px - 25 * s, py - 31 * s); x.fill();
+  x.lineWidth = 1; x.beginPath(); x.moveTo(px, py - 46 * s); x.lineTo(px, py - 51 * s); x.stroke();
+  if (season === 3) { x.fillStyle = '#f7f4ee'; x.beginPath(); x.moveTo(px - 3 * s, py - 42 * s); x.quadraticCurveTo(px - 8 * s, py - 34 * s, px - 18 * s, py - 32 * s); x.lineTo(px + 18 * s, py - 32 * s); x.quadraticCurveTo(px + 8 * s, py - 34 * s, px + 3 * s, py - 42 * s); x.fill(); }
+}
+function drawPagoda(x, pg) {
+  const { x: px, s, tiers } = pg; let y = pg.y, w = 15 * s;
+  x.strokeStyle = INK; x.lineWidth = .7;
+  for (let t = 0; t < tiers; t++) {
+    const th = 7 * s * (1 - t * .05);
+    x.fillStyle = '#ede6d3'; x.fillRect(px - w / 2, y - th, w, th); x.strokeRect(px - w / 2, y - th, w, th);
+    y -= th; const ew = w * 1.5;
+    x.fillStyle = '#262320'; x.beginPath(); x.moveTo(px - ew / 2, y - 2.2 * s); x.lineTo(px - w / 2, y + .5); x.lineTo(px + w / 2, y + .5);
+    x.lineTo(px + ew / 2, y - 2.2 * s); x.lineTo(px + w * .35, y - 3 * s); x.lineTo(px - w * .35, y - 3 * s); x.closePath(); x.fill();
+    y -= 3 * s; w *= .86;
+  }
+  x.lineWidth = 1; x.beginPath(); x.moveTo(px, y); x.lineTo(px, y - 9 * s); x.stroke();
+  x.fillStyle = '#262320'; for (let q = 1; q < 4; q++) { x.beginPath(); x.arc(px, y - q * 2.3 * s, 1.2 * s, 0, TAU); x.fill(); }
+}
+const LEAF = { fresh: ['#8db26c', '#a9c47f', '#6f9a58'], blossom: ['#e9a2a8', '#f4d6d1', '#d97c88'], leaf: ['#3e6a48', '#56845a', '#2c4e38'],
+  maple: ['#b8412f', '#d2733a', '#dba748', '#9c3325'], plum: ['#c2303a', '#d8505a', '#e4717a'] };
+function drawBranchy(x, bx, by, s, season, kind, r) {
+  const segs = [], tips = [];
+  const grow = (x0, y0, a, len, w, d) => {
+    const x1 = x0 + Math.cos(a) * len, y1 = y0 + Math.sin(a) * len;
+    segs.push(x0, y0, (x0 + x1) / 2 + (r() - .5) * len * .35, (y0 + y1) / 2 + (r() - .5) * len * .2, x1, y1, w);
+    if (d === 0) { tips.push(x1, y1); return; }
+    const nb = d >= 3 ? 2 : 2 + (r() < .45 ? 1 : 0);
+    for (let j = 0; j < nb; j++) grow(x1, y1, a + (j - (nb - 1) / 2) * (.42 + r() * .38) + (r() - .5) * .35, len * (.64 + r() * .16), w * .64, d - 1);
+  };
+  grow(bx, by, -Math.PI / 2 + (r() - .5) * .35, s * .36, s * .055, 4);
+  const pal = kind === 'blossom' ? LEAF.blossom : kind === 'maple' ? LEAF.maple : kind === 'plum' ? LEAF.plum : season === 0 ? LEAF.fresh : LEAF.leaf;
+  const R = s * (kind === 'plum' || kind === 'blossom' ? .075 : .1), dotR = s * (kind === 'plum' ? .013 : .02);
+  if (kind === 'leafy' || kind === 'maple') { x.fillStyle = 'rgba(30,34,28,.22)'; x.beginPath();
+    for (let q = 0; q < tips.length; q += 2) { x.moveTo(tips[q] + R * 1.1, tips[q + 1]); x.ellipse(tips[q], tips[q + 1], R * 1.1, R * .8, 0, 0, TAU); } x.fill(); }
+  x.lineCap = 'round'; x.strokeStyle = '#23201d';
+  for (let q = 0; q < segs.length; q += 7) { x.lineWidth = Math.max(.5, segs[q + 6]); x.beginPath(); x.moveTo(segs[q], segs[q + 1]); x.quadraticCurveTo(segs[q + 2], segs[q + 3], segs[q + 4], segs[q + 5]); x.stroke(); }
+  if (kind === 'bare') {
+    if (season === 3) { x.fillStyle = '#f7f4ee'; x.beginPath(); for (let q = 0; q < segs.length; q += 14) { const mx = segs[q + 2], my = segs[q + 3] - segs[q + 6] * .6, rr = Math.max(1, segs[q + 6] * 1.4); x.moveTo(mx + rr * 2, my); x.ellipse(mx, my, rr * 2, rr * .7, 0, 0, TAU); } x.fill(); }
+    return;
+  }
+  const nd = kind === 'plum' ? 4 : kind === 'blossom' ? 9 : 12;
+  for (let q = 0; q < tips.length; q += 2) {
+    for (let j = 0; j < nd; j++) {
+      const a = r() * TAU, rad = Math.sqrt(r()) * R;
+      x.globalAlpha = .65 + r() * .3; x.fillStyle = pal[Math.floor(r() * pal.length)];
+      x.beginPath(); x.ellipse(tips[q] + Math.cos(a) * rad, tips[q + 1] + Math.sin(a) * rad * .8, dotR * (1 + r() * .6), dotR * (.8 + r() * .4), r() * 3, 0, TAU); x.fill();
+    }
+  }
+  if (kind === 'plum' && season === 3) { x.globalAlpha = .9; x.fillStyle = '#f7f4ee'; x.beginPath(); for (let q = 0; q < segs.length; q += 21) { const mx = segs[q + 4], my = segs[q + 5] - 1; x.moveTo(mx + 3, my); x.ellipse(mx, my, 3, 1, 0, 0, TAU); } x.fill(); }
+  x.globalAlpha = 1;
+}
+function drawPine(x, bx, by, s, season, r) {
+  const hgt = s * (.95 + r() * .35), lean = (r() - .5) * s * .35, n = 10, pts = [], ph = r() * 3;
+  for (let q = 0; q <= n; q++) { const t = q / n; pts.push([bx + lean * t * t + Math.sin(t * 3 + ph) * s * .04, by - hgt * t]); }
+  const w0 = s * .045; x.fillStyle = '#2a2521'; x.beginPath();
+  for (let q = 0; q <= n; q++) x.lineTo(pts[q][0] - w0 * (1 - q / n * .75), pts[q][1]);
+  for (let q = n; q >= 0; q--) x.lineTo(pts[q][0] + w0 * (1 - q / n * .75), pts[q][1]);
+  x.fill();
+  x.strokeStyle = paperA(.35); x.lineWidth = .6; x.beginPath();
+  for (let q = 1; q < 7; q++) { const [tx, ty] = pts[q]; x.moveTo(tx - w0 * .5, ty); x.quadraticCurveTo(tx, ty - 2, tx + w0 * .5, ty + 1); } x.stroke();
+  const cl = [], nb = 4 + Math.floor(r() * 3);
+  for (let b = 0; b < nb; b++) {
+    const t = .38 + .56 * (b / (nb - 1)) + r() * .05, q = Math.min(n, Math.round(t * n)), [tx, ty] = pts[q], side = b % 2 ? 1 : -1;
+    const len = s * (.18 + .18 * r()) * (1.1 - t * .5), ex = tx + side * len, ey = ty + len * (.05 + .15 * r());
+    x.strokeStyle = '#2a2521'; x.lineWidth = s * .018 * (1.2 - t * .6); x.beginPath(); x.moveTo(tx, ty); x.quadraticCurveTo((tx + ex) / 2, ty - len * .12, ex, ey); x.stroke();
+    cl.push([ex, ey, s * (.07 + .04 * r())]); if (len > s * .2) cl.push([(tx + ex) / 2, ty - len * .05, s * (.055 + .03 * r())]);
+  }
+  cl.push([pts[n][0], pts[n][1], s * .08]);
+  for (const [cx, cy, cr] of cl) {
+    x.fillStyle = 'rgba(28,40,34,.42)'; x.beginPath(); x.ellipse(cx, cy, cr * 1.35, cr * .5, 0, 0, TAU); x.fill();
+    if (season <= 1) { x.fillStyle = 'rgba(70,112,80,.3)'; x.beginPath(); x.ellipse(cx + cr * .2, cy - cr * .1, cr * 1.1, cr * .4, 0, 0, TAU); x.fill(); }
+    x.strokeStyle = '#1c2621'; x.lineWidth = Math.max(.45, s * .006); x.globalAlpha = .85; x.beginPath();
+    for (let j = 0; j < 14; j++) { const a = -Math.PI * (.04 + .92 * j / 13), rr = cr * (1.05 + r() * .35); x.moveTo(cx, cy + cr * .08); x.lineTo(cx + Math.cos(a) * rr * 1.3, cy + Math.sin(a) * rr * .55); }
+    x.stroke(); x.globalAlpha = 1;
+    if (season === 3) { x.fillStyle = 'rgba(248,245,238,.95)'; x.beginPath(); x.ellipse(cx, cy - cr * .32, cr * 1.1, cr * .22, 0, 0, TAU); x.fill(); }
+  }
+}
+function drawWillow(x, bx, by, s, season, r) {
+  const th = s * .42, tx = bx + (r() - .5) * s * .15, ty = by - th;
+  x.strokeStyle = '#2a2521'; x.lineCap = 'round'; x.lineWidth = s * .055; x.beginPath(); x.moveTo(bx, by); x.quadraticCurveTo(bx + (r() - .5) * s * .2, by - th * .5, tx, ty); x.stroke();
+  const col = ['#9dbf6b', '#5b8a4c', '#bda75a', '#3b3631'][season], nb = 3 + Math.floor(r() * 2), br = [];
+  x.lineWidth = s * .018;
+  for (let b = 0; b < nb; b++) { const ex = tx + (b / (nb - 1) - .5) * s * .7 + (r() - .5) * s * .1, ey = ty - s * (.18 + .22 * r());
+    x.beginPath(); x.moveTo(tx, ty); x.quadraticCurveTo((tx + ex) / 2, ey, ex, ey + s * .03); x.stroke(); br.push([ex, ey]); }
+  x.strokeStyle = col; x.globalAlpha = season === 3 ? .4 : .6; x.lineWidth = .7; x.beginPath();
+  for (const [ex, ey] of br) for (let q = 0; q < 14; q++) {
+    const t = r(), px = lerp(tx, ex, t), py = lerp(ty, ey, t) - Math.sin(t * Math.PI) * s * .05, len = s * (.25 + .35 * r()) * (season === 3 ? .6 : 1);
+    x.moveTo(px, py); x.quadraticCurveTo(px + (r() - .5) * s * .1, py + len * .4, px + (r() - .5) * s * .12, py + len);
+  }
+  x.stroke(); x.globalAlpha = 1;
+}
+function drawTree(x, it, season) {
+  const r = mulberry(it.seed);
+  if (it.kind === 'pine') drawPine(x, it.x, it.y, it.s, season, r);
+  else if (it.kind === 'willow') drawWillow(x, it.x, it.y, it.s, season, r);
+  else drawBranchy(x, it.x, it.y, it.s, season, it.kind, r);
+}
+function drawReeds(x, rd, season, r) {
+  x.lineCap = 'round';
+  for (let j = 0; j < rd.n; j++) {
+    const bx = rd.x + (r() - .5) * 34, h = 18 + r() * 36, lean = (r() - .25) * 16;
+    x.strokeStyle = season === 1 ? '#3d5a3f' : season === 0 ? '#5d7a4a' : '#3b3834'; x.globalAlpha = .75; x.lineWidth = .8;
+    x.beginPath(); x.moveTo(bx, 804); x.quadraticCurveTo(bx + lean * .3, 804 - h * .6, bx + lean, 804 - h); x.stroke();
+    if (season >= 2) { x.fillStyle = '#dcd2bb'; x.globalAlpha = .9; x.beginPath(); x.ellipse(bx + lean, 804 - h - 3, 1.8, 5, lean * .03, 0, TAU); x.fill(); }
+  }
+  x.globalAlpha = 1;
+}
+function drawLotus(x, lo) {
+  for (const l of lo.leaves) {
+    x.fillStyle = 'rgba(52,92,64,.88)'; x.beginPath(); x.ellipse(l.x, l.y, l.rx, l.rx * .32, l.a, 0, TAU); x.fill();
+    x.strokeStyle = 'rgba(24,40,30,.6)'; x.lineWidth = .5; x.beginPath();
+    for (let q = 0; q < 6; q++) { const a = q / 6 * TAU; x.moveTo(l.x, l.y); x.lineTo(l.x + Math.cos(a) * l.rx * .85, l.y + Math.sin(a) * l.rx * .27); } x.stroke();
+  }
+  for (const f of lo.flowers) {
+    x.strokeStyle = '#34503c'; x.lineWidth = .8; x.beginPath(); x.moveTo(f.x, f.y); x.lineTo(f.x + 1, f.y - f.h); x.stroke();
+    const fx = f.x + 1, fy = f.y - f.h, s = f.s;
+    for (const [dx, a] of [[-3, -.5], [3, .5], [0, 0]]) { x.fillStyle = dx ? '#e8a1aa' : '#f3c7cc'; x.beginPath(); x.ellipse(fx + dx * s, fy - 3 * s, 2.6 * s, 5 * s, a, 0, TAU); x.fill(); }
+    x.strokeStyle = 'rgba(190,70,90,.6)'; x.lineWidth = .5; x.beginPath(); x.ellipse(fx, fy - 3 * s, 2.6 * s, 5 * s, 0, 0, TAU); x.stroke();
+  }
+}
+
+/* ---------------- chunk rendering ---------------- */
+function renderChunk(L, i) {
+  const pxU = k * DPR * L.res, cw = Math.max(1, Math.ceil(CW * pxU)), chh = Math.max(1, Math.ceil((L.y1 - L.y0) * pxU));
+  const c = document.createElement('canvas'); c.width = cw; c.height = chh;
+  const x = c.getContext('2d'), sx = cw / CW, sy = chh / (L.y1 - L.y0);
+  x.setTransform(sx, 0, 0, sy, -i * CW * sx, -L.y0 * sy);
+  const X0 = i * CW, X1 = X0 + CW;
+  if (L.id < 2) {
+    const st = L.id === 0 ? FAR : MID;
+    eachMountain(L, X0, X1, o => {
+      o.parts.forEach((P, pi) => {
+        drawPart(x, P, st, rng(L.id, o.i, 100 + pi), X0, X1, o.season);
+        if (pi === 0 && o.fall) drawFall(x, o.fall);
+        if (L.id === 1) drawTinyTrees(x, P, rng(L.id, o.i, 200 + pi), o.season, X0, X1);
+      });
+      if (o.temple) { const t = o.temple; drawHouse(x, { x: t.x, y: t.y, s: .42 * t.s }, o.season); drawHouse(x, { x: t.x + 14 * t.s, y: t.y + 4, s: .36 * t.s }, o.season); }
+      if (o.pagoda) drawPagoda(x, o.pagoda);
+    });
+  } else {
+    const g = x.createLinearGradient(0, 780, 0, 1000);
+    g.addColorStop(0, 'rgba(92,120,132,0)'); g.addColorStop(.25, 'rgba(92,120,132,.07)'); g.addColorStop(1, 'rgba(70,98,112,.17)');
+    x.fillStyle = g; x.fillRect(X0, 780, CW, 220);
+    x.strokeStyle = INK; x.lineCap = 'round';
+    for (let cI = Math.floor((X0 - 90) / 100); cI <= Math.ceil((X1 + 90) / 100); cI++) {
+      const r = rng(3, cI, 1), nw = 5 + Math.floor(r() * 6);
+      for (let q = 0; q < nw; q++) {
+        const yy = 806 + Math.pow(r(), .8) * 190, dp = (yy - 800) / 200, xx = cI * 100 + r() * 100, len = 6 + dp * 38 * (.5 + r());
+        x.globalAlpha = .06 + dp * .14; x.lineWidth = .5 + dp * .8; x.beginPath(); x.moveTo(xx - len / 2, yy);
+        x.quadraticCurveTo(xx - len / 4, yy - 1.5 - dp * 2, xx, yy); x.quadraticCurveTo(xx + len / 4, yy + 1.5 + dp * 2, xx + len / 2, yy); x.stroke();
+      }
+    }
+    x.globalAlpha = 1;
+    for (let q = Math.floor((X0 - 500) / 650) - 1; q <= Math.ceil((X1 + 200) / 650); q++) { const lo = genLotus(q); if (lo && lo.x1 > X0 && lo.x0 < X1) drawLotus(x, lo); }
+    eachShore(X0 - 40, X1 + 40, o => {
+      const P = o.P;
+      x.save(); const rp = new Path2D(); rp.moveTo(P.x0, 800);
+      for (let p = 0; p < P.n; p++) rp.lineTo(P.x0 + p * P.step, 800 + (800 - P.ys[p]) * .5);
+      rp.lineTo(P.x0 + P.w, 800); rp.closePath(); x.fillStyle = 'rgba(31,29,27,.09)'; x.fill(rp); x.clip(rp);
+      const rr = rng(2, o.i, 50); x.strokeStyle = paperA(.6); x.lineWidth = 1.3;
+      for (let yy = 804; yy < 800 + (800 - P.top) * .5; yy += 4 + rr() * 5) { const xa = P.x0 + rr() * P.w * .3; x.beginPath(); x.moveTo(xa, yy); x.lineTo(xa + P.w * (.4 + .5 * rr()), yy); x.stroke(); }
+      x.restore();
+      drawPart(x, P, ROCK, rng(2, o.i, 51), X0, X1, o.season);
+      for (const it of o.items) if (it.t === 'house') drawHouse(x, it, o.season); else if (it.t === 'pav') drawPav(x, it, o.season);
+      for (const it of o.items) if (it.t === 'tree' && it.x > X0 - 110 && it.x < X1 + 110) drawTree(x, it, o.season);
+      const rr2 = rng(2, o.i, 52); for (const rd of o.reeds) drawReeds(x, rd, o.season, rr2);
+    });
+  }
+  return c;
+}
+function getChunk(L, i) {
+  let ch = L.chunks.get(i); if (ch) return ch;
+  if (!forceRender && performance.now() - frameStart > 12) return null;
+  ch = renderChunk(L, i); L.chunks.set(i, ch); return ch;
+}
+function drawLayer(L) {
+  const kd = k * DPR, lv = V * L.p, i0 = Math.floor(lv / CW), i1 = Math.floor((lv + Wu) / CW);
+  const y = Math.round(SY0 * DPR + L.y0 * kd), hh = Math.round((L.y1 - L.y0) * kd);
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  for (let i = i0; i <= i1; i++) {
+    const ch = getChunk(L, i); if (!ch) continue;
+    const xa = Math.round((i * CW - lv) * kd), xb = Math.round(((i + 1) * CW - lv) * kd);
+    ctx.drawImage(ch, xa, y, xb - xa, hh);
+  }
+  if (performance.now() - frameStart < 9) { const ahead = vel <= 0 ? i0 - 1 : i1 + 1; if (!L.chunks.has(ahead)) L.chunks.set(ahead, renderChunk(L, ahead)); }
+  for (const key of L.chunks.keys()) if (key < i0 - 3 || key > i1 + 3) L.chunks.delete(key);
+}
+
+/* ---------------- sprites ---------------- */
+let paperTile = null, paperPat = null, mistSprite = null, vignette = null, stars = [], flecks = [];
+function makeSprites() {
+  const s = Math.round(256 * DPR); paperTile = document.createElement('canvas'); paperTile.width = paperTile.height = s;
+  const p = paperTile.getContext('2d'); p.fillStyle = '#e5dbc1'; p.fillRect(0, 0, s, s);
+  const id = p.getImageData(0, 0, s, s), d = id.data;
+  for (let q = 0; q < d.length; q += 4) { const nn = (Math.random() - .5) * 9; d[q] += nn; d[q + 1] += nn; d[q + 2] += nn * .8; }
+  p.putImageData(id, 0, 0);
+  p.globalAlpha = .045; p.strokeStyle = '#6b5a3c'; p.lineWidth = DPR * .6;
+  for (let q = 0; q < 90; q++) { const x0 = 20 * DPR + Math.random() * (s - 40 * DPR), y0 = 20 * DPR + Math.random() * (s - 40 * DPR), a = Math.random() * TAU, l = (4 + Math.random() * 14) * DPR;
+    p.beginPath(); p.moveTo(x0, y0); p.quadraticCurveTo(x0 + Math.cos(a) * l * .5 + 3, y0 + Math.sin(a) * l * .5, x0 + Math.cos(a) * l, y0 + Math.sin(a) * l); p.stroke(); }
+  p.globalAlpha = .03; p.fillStyle = '#5a4a30'; for (let y = 0; y < s; y += 2 * DPR) p.fillRect(0, y, s, DPR * .5);
+  paperPat = ctx.createPattern(paperTile, 'repeat');
+  mistSprite = document.createElement('canvas'); mistSprite.width = 512; mistSprite.height = 128;
+  const m = mistSprite.getContext('2d');
+  for (let q = 0; q < 46; q++) { const x0 = 60 + Math.random() * 392, y0 = 64 + (Math.random() - .5) * 40, rr = 24 + Math.random() * 46;
+    const g = m.createRadialGradient(x0, y0, 0, x0, y0, rr); g.addColorStop(0, paperA(.16)); g.addColorStop(1, paperA(0)); m.fillStyle = g; m.fillRect(x0 - rr, y0 - rr, rr * 2, rr * 2); }
+  stars = Array.from({ length: 170 }, () => ({ x: Math.random() * 3000, y: 40 + Math.pow(Math.random(), 1.3) * 520, r: .5 + Math.random() * 1.1, f: 1 + Math.random() * 3, ph: Math.random() * TAU }));
+  const fr = mulberry(99); flecks = Array.from({ length: 120 }, () => ({ u: fr(), v: .03 + fr() * .94, r: .8 + fr() * 2.6, a: fr() * TAU }));
+}
+function makeVignette() {
+  vignette = document.createElement('canvas'); vignette.width = 8; vignette.height = 256;
+  const v = vignette.getContext('2d'), g = v.createLinearGradient(0, 0, 0, 256);
+  g.addColorStop(0, 'rgba(120,90,50,.20)'); g.addColorStop(.08, 'rgba(120,90,50,0)'); g.addColorStop(.92, 'rgba(120,90,50,0)'); g.addColorStop(1, 'rgba(120,90,50,.22)');
+  v.fillStyle = g; v.fillRect(0, 0, 8, 256);
+}
+
+/* ---------------- poems ---------------- */
+const POEMS = [
+  { l: ['两岸猿声啼不住', '轻舟已过万重山'], a: '李白', ti: '早发白帝城', s: -1, t: 'day' },
+  { l: ['横看成岭侧成峰', '远近高低各不同'], a: '苏轼', ti: '题西林壁', s: -1, t: 'day' },
+  { l: ['明月松间照', '清泉石上流'], a: '王维', ti: '山居秋暝', s: 2, t: 'night' },
+  { l: ['空山新雨后', '天气晚来秋'], a: '王维', ti: '山居秋暝', s: 2, t: 'dusk' },
+  { l: ['孤舟蓑笠翁', '独钓寒江雪'], a: '柳宗元', ti: '江雪', s: 3, t: 'any' },
+  { l: ['千山鸟飞绝', '万径人踪灭'], a: '柳宗元', ti: '江雪', s: 3, t: 'any' },
+  { l: ['两个黄鹂鸣翠柳', '一行白鹭上青天'], a: '杜甫', ti: '绝句', s: 0, t: 'day' },
+  { l: ['窗含西岭千秋雪', '门泊东吴万里船'], a: '杜甫', ti: '绝句', s: 3, t: 'day' },
+  { l: ['停车坐爱枫林晚', '霜叶红于二月花'], a: '杜牧', ti: '山行', s: 2, t: 'dusk' },
+  { l: ['远上寒山石径斜', '白云生处有人家'], a: '杜牧', ti: '山行', s: 2, t: 'day' },
+  { l: ['竹外桃花三两枝', '春江水暖鸭先知'], a: '苏轼', ti: '惠崇春江晚景', s: 0, t: 'day' },
+  { l: ['接天莲叶无穷碧', '映日荷花别样红'], a: '杨万里', ti: '晓出净慈寺送林子方', s: 1, t: 'day' },
+  { l: ['小荷才露尖尖角', '早有蜻蜓立上头'], a: '杨万里', ti: '小池', s: 1, t: 'day' },
+  { l: ['月落乌啼霜满天', '江枫渔火对愁眠'], a: '张继', ti: '枫桥夜泊', s: 2, t: 'night' },
+  { l: ['姑苏城外寒山寺', '夜半钟声到客船'], a: '张继', ti: '枫桥夜泊', s: 2, t: 'night' },
+  { l: ['野旷天低树', '江清月近人'], a: '孟浩然', ti: '宿建德江', s: -1, t: 'night' },
+  { l: ['孤帆远影碧空尽', '唯见长江天际流'], a: '李白', ti: '黄鹤楼送孟浩然之广陵', s: 0, t: 'day' },
+  { l: ['山重水复疑无路', '柳暗花明又一村'], a: '陆游', ti: '游山西村', s: 0, t: 'day' },
+  { l: ['日出江花红胜火', '春来江水绿如蓝'], a: '白居易', ti: '忆江南', s: 0, t: 'day' },
+  { l: ['一道残阳铺水中', '半江瑟瑟半江红'], a: '白居易', ti: '暮江吟', s: -1, t: 'dusk' },
+  { l: ['可怜九月初三夜', '露似真珠月似弓'], a: '白居易', ti: '暮江吟', s: 2, t: 'night' },
+  { l: ['忽如一夜春风来', '千树万树梨花开'], a: '岑参', ti: '白雪歌送武判官归京', s: 3, t: 'day' },
+  { l: ['海上生明月', '天涯共此时'], a: '张九龄', ti: '望月怀远', s: -1, t: 'night' },
+  { l: ['人闲桂花落', '夜静春山空'], a: '王维', ti: '鸟鸣涧', s: 0, t: 'night' },
+  { l: ['行到水穷处', '坐看云起时'], a: '王维', ti: '终南别业', s: -1, t: 'any' },
+  { l: ['采菊东篱下', '悠然见南山'], a: '陶渊明', ti: '饮酒', s: 2, t: 'day' },
+  { l: ['落霞与孤鹜齐飞', '秋水共长天一色'], a: '王勃', ti: '滕王阁序', s: 2, t: 'dusk' },
+  { l: ['众鸟高飞尽', '孤云独去闲'], a: '李白', ti: '独坐敬亭山', s: -1, t: 'day' },
+  { l: ['沾衣欲湿杏花雨', '吹面不寒杨柳风'], a: '志南', ti: '绝句', s: 0, t: 'day' },
+  { l: ['无边落木萧萧下', '不尽长江滚滚来'], a: '杜甫', ti: '登高', s: 2, t: 'day' },
+  { l: ['黄梅时节家家雨', '青草池塘处处蛙'], a: '赵师秀', ti: '约客', s: 1, t: 'any' },
+  { l: ['绿树阴浓夏日长', '楼台倒影入池塘'], a: '高骈', ti: '山亭夏日', s: 1, t: 'day' },
+  { l: ['飞流直下三千尺', '疑是银河落九天'], a: '李白', ti: '望庐山瀑布', s: -1, t: 'day' },
+  { l: ['晚来天欲雪', '能饮一杯无'], a: '白居易', ti: '问刘十九', s: 3, t: 'dusk' },
+  { l: ['春潮带雨晚来急', '野渡无人舟自横'], a: '韦应物', ti: '滁州西涧', s: 0, t: 'dusk' },
+  { l: ['春江潮水连海平', '海上明月共潮生'], a: '张若虚', ti: '春江花月夜', s: 0, t: 'night' },
+  { l: ['梅须逊雪三分白', '雪却输梅一段香'], a: '卢梅坡', ti: '雪梅', s: 3, t: 'any' },
+  { l: ['墙角数枝梅', '凌寒独自开'], a: '王安石', ti: '梅花', s: 3, t: 'any' },
+  { l: ['西塞山前白鹭飞', '桃花流水鳜鱼肥'], a: '张志和', ti: '渔歌子', s: 0, t: 'day' },
+  { l: ['江碧鸟逾白', '山青花欲燃'], a: '杜甫', ti: '绝句', s: 0, t: 'day' },
+  { l: ['迟日江山丽', '春风花草香'], a: '杜甫', ti: '绝句', s: 0, t: 'day' },
+  { l: ['水光潋滟晴方好', '山色空蒙雨亦奇'], a: '苏轼', ti: '饮湖上初晴后雨', s: 1, t: 'day' },
+  { l: ['独坐幽篁里', '弹琴复长啸'], a: '王维', ti: '竹里馆', s: -1, t: 'night' },
+  { l: ['泠泠七弦上', '静听松风寒'], a: '刘长卿', ti: '弹琴', s: -1, t: 'any' },
+  { l: ['青山遮不住', '毕竟东流去'], a: '辛弃疾', ti: '菩萨蛮', s: -1, t: 'any' },
+];
+const SEALS = ['卧游', '清音', '听松', '烟波', '山水', '知白', '无尽', '闲云'];
+const poemCache = new Map();
+const poemX = j => -T_PANEL - POEM_OFF - j * 2300;
+function poemFor(j) {
+  if (poemCache.has(j)) return poemCache.get(j);
+  const J = -poemX(j), s = seasonIdx(J), L = light(J);
+  const tt = L.night > .6 ? 'night' : (L.dusk > .25 || L.dawn > .25) ? 'dusk' : 'day';
+  const pool = POEMS.filter(p => (p.s === s || p.s === -1) && (p.t === tt || p.t === 'any' || (tt === 'dusk' && p.t === 'day')));
+  const r = rng(6, j, 1, 0);
+  let idx = Math.floor(r() * pool.length);
+  const prev = j > 0 ? poemFor(j - 1).p : null;
+  if (pool[idx] === prev) idx = (idx + 1) % pool.length;
+  const o = { p: pool[idx], dy: r() * 70, seal: SEALS[Math.floor(r() * SEALS.length)] };
+  poemCache.set(j, o); return o;
+}
+function drawSeal(c, cx, y, size, text, alpha = .9) {
+  const n = text.length, cols = n > 2 ? 2 : 1, rows = n > 2 ? Math.ceil(n / 2) : n;
+  const w = size * cols * .92 + size * .3, h = size * rows * .92 + size * .3, x0 = cx - w / 2;
+  const r = mulberry(text.charCodeAt(0) * 31 + n);
+  c.save(); c.globalAlpha = alpha; c.fillStyle = '#b3322b';
+  c.beginPath(); c.moveTo(x0 + r() * 1.5, y + r() * 1.5); c.lineTo(x0 + w - r() * 1.5, y + r() * 1.5); c.lineTo(x0 + w - r() * 1.5, y + h - r() * 1.5); c.lineTo(x0 + r() * 1.5, y + h - r() * 1.5); c.closePath(); c.fill();
+  c.fillStyle = '#f1e7d0'; c.font = `${size * .8}px ${BRUSH}`; c.textAlign = 'center'; c.textBaseline = 'middle';
+  for (let q = 0; q < n; q++) {
+    const col = cols === 2 ? (q < rows ? 1 : 0) : 0, row = q % rows;
+    c.fillText(text[q], x0 + size * .15 + (col + .5) * size * .92, y + size * .15 + (row + .5) * size * .92 + size * .03);
+  }
+  c.fillStyle = 'rgba(229,219,193,.55)'; for (let q = 0; q < 6; q++) { c.beginPath(); c.arc(x0 + r() * w, y + r() * h, .4 + r() * size * .03, 0, TAU); c.fill(); }
+  c.restore();
+}
+function drawPoems(c) {
+  c.setTransform(DPR, 0, 0, DPR, 0, 0);
+  const jA = Math.max(0, Math.floor((-T_PANEL - POEM_OFF - (V + Wu + 300)) / 2300)), jB = Math.ceil((-T_PANEL - POEM_OFF - (V - 300)) / 2300);
+  for (let j = jA; j <= jB; j++) {
+    const xw = poemX(j), sx = (xw - V) * k; if (sx < -200 * k || sx > W + 60 * k) continue;
+    const pm = poemFor(j), P = pm.p, fs = 34 * k, gap = fs * 1.1, y0 = SY0 + (64 + pm.dy) * k;
+    const nt = nightAtX(xw - V);
+    c.font = `${fs}px ${BRUSH}`; c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.shadowColor = nt > .5 ? 'rgba(18,22,34,.7)' : paperA(.95); c.shadowBlur = 7 * DPR;
+    const mix = (a, b) => Math.round(lerp(a, b, nt));
+    c.fillStyle = `rgba(${mix(30, 226)},${mix(28, 228)},${mix(26, 236)},.9)`;
+    P.l.forEach((line, li) => { const cx = sx - li * fs * 1.3; for (let q = 0; q < line.length; q++) c.fillText(line[q], cx, y0 + q * gap + fs / 2); });
+    const afs = 15 * k, ax = sx - P.l.length * fs * 1.3 + fs * .35, attr = P.a + '·' + P.ti;
+    c.font = `${afs}px ${BRUSH}`; c.fillStyle = nt > .5 ? 'rgba(210,214,224,.75)' : 'rgba(60,54,46,.8)';
+    const ay0 = y0 + fs * .9; for (let q = 0; q < attr.length; q++) c.fillText(attr[q], ax, ay0 + q * afs * 1.08);
+    c.shadowBlur = 0;
+    drawSeal(c, ax, ay0 + attr.length * afs * 1.08 + 4 * k, 17 * k, pm.seal);
+  }
+  c.shadowBlur = 0;
+}
+
+/* ---------------- title panel (引首) ---------------- */
+function drawPanel(c) {
+  c.setTransform(DPR, 0, 0, DPR, 0, 0);
+  const x0 = (-T_PANEL - V) * k, x1 = -V * k; if (x1 < 0 || x0 > W) return;
+  const pw = x1 - x0;
+  c.fillStyle = '#ece4cf'; c.fillRect(x0, SY0, pw, SY1 - SY0);
+  for (const f of flecks) { c.fillStyle = `rgba(196,158,80,${.35 + .3 * Math.sin(f.a)})`; c.beginPath(); c.ellipse(x0 + f.u * pw, SY0 + f.v * (SY1 - SY0), f.r * k * 1.4, f.r * k, f.a, 0, TAU); c.fill(); }
+  c.fillStyle = '#b3b7a4'; c.fillRect(x0 - 12 * k, SY0, 12 * k, SY1 - SY0);
+  c.fillStyle = 'rgba(60,62,50,.5)'; c.fillRect(x0 - 12 * k, SY0, 1, SY1 - SY0); c.fillRect(x0, SY0, 1, SY1 - SY0);
+  const fs = Math.min(T_PANEL * .32, 150) * k, cx = x0 + pw * .55, ty = SY0 + (500 * k) - fs * 2.1;
+  c.font = `${fs}px ${BRUSH}`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillStyle = '#1c1a17';
+  '无尽江山'.split('').forEach((ch, q) => c.fillText(ch, cx, ty + q * fs * 1.05 + fs / 2));
+  drawSeal(c, cx + fs * .9, SY0 + 70 * k, 24 * k, '卧游');
+  const ifs = 17 * k, ix = cx - fs * .95; let iy = ty + fs * 2.4;
+  c.font = `${ifs}px ${BRUSH}`; c.fillStyle = 'rgba(40,36,30,.85)';
+  for (const ch of '丙午秋日') { c.fillText(ch, ix, iy); iy += ifs * 1.1; }
+  c.save(); c.translate(ix, iy + ifs * 1.05); c.rotate(Math.PI / 2); c.font = `${ifs * .85}px "Noto Serif SC",serif`; c.fillText('Opus', 0, 0); c.restore();
+  iy += ifs * 2.75; c.font = `${ifs}px ${BRUSH}`; c.fillText('写', ix, iy);
+  drawSeal(c, ix, iy + ifs * .8, 13 * k, 'OPUS', .92);
+  c.font = `${13 * k}px ${BRUSH}`; c.fillStyle = 'rgba(80,70,56,.55)';
+  const hint = '自右向左徐徐展卷'; let hy = SY1 - (40 + hint.length * 15) * k;
+  for (const ch of hint) { c.fillText(ch, x0 + pw * .12, hy); hy += 15 * k; }
+}
+
+/* ---------------- live creatures ---------------- */
+const flocks = [], cranes = [], sparrows = [], kois = [], ripples = [], parts = [], notes = [];
+let flockTimer = 3;
+function drawBird(c, x, y, s, ph, col, lw) {
+  const fl = Math.sin(ph); c.strokeStyle = col; c.lineWidth = lw * s; c.beginPath();
+  c.moveTo(x - 7 * s, y - 4 * s * fl - s); c.quadraticCurveTo(x - 3 * s, y - 3 * s * fl, x, y); c.quadraticCurveTo(x + 3 * s, y - 3 * s * fl, x + 7 * s, y - 4 * s * fl - s); c.stroke();
+}
+function drawCrane(c, x, y, s, ph, f) {
+  const fl = Math.sin(ph);
+  c.lineCap = 'round'; c.strokeStyle = '#2a2622'; c.lineWidth = .7 * s;
+  c.fillStyle = '#cfc8b8'; c.beginPath(); c.moveTo(x + f * 2 * s, y - s); c.quadraticCurveTo(x - f * 2 * s, y - 12 * s * fl, x - f * 10 * s, y - 20 * s * fl); c.quadraticCurveTo(x - f * 9 * s, y - 8 * s * fl, x - f * 5 * s, y); c.fill();
+  c.beginPath(); c.moveTo(x - f * 7 * s, y + s); c.lineTo(x - f * 25 * s, y + 3 * s); c.stroke();
+  c.fillStyle = '#f7f3ea'; c.beginPath(); c.ellipse(x, y, 9 * s, 3.4 * s, 0, 0, TAU); c.fill(); c.stroke();
+  c.lineWidth = 1.3 * s; c.beginPath(); c.moveTo(x + f * 7 * s, y - s); c.quadraticCurveTo(x + f * 14 * s, y - 4 * s, x + f * 21 * s, y - 3 * s); c.stroke();
+  c.fillStyle = '#f7f3ea'; c.beginPath(); c.arc(x + f * 21.5 * s, y - 3.2 * s, 1.8 * s, 0, TAU); c.fill(); c.lineWidth = .6 * s; c.stroke();
+  c.fillStyle = '#c0312a'; c.beginPath(); c.arc(x + f * 21.5 * s, y - 4.6 * s, .9 * s, 0, TAU); c.fill();
+  c.strokeStyle = '#6a5a3a'; c.lineWidth = .8 * s; c.beginPath(); c.moveTo(x + f * 23 * s, y - 3 * s); c.lineTo(x + f * 28 * s, y - 2.4 * s); c.stroke();
+  c.strokeStyle = '#2a2622'; c.lineWidth = .7 * s; c.fillStyle = '#f7f3ea';
+  c.beginPath(); c.moveTo(x + f * 4 * s, y - s); c.quadraticCurveTo(x + f * 2 * s, y - 15 * s * fl, x - f * 7 * s, y - 25 * s * fl); c.quadraticCurveTo(x - f * 8 * s, y - 10 * s * fl, x - f * 6 * s, y); c.closePath(); c.fill(); c.stroke();
+  c.fillStyle = '#26221f'; c.beginPath(); c.moveTo(x - f * 7 * s, y - 25 * s * fl); c.quadraticCurveTo(x - f * 6 * s, y - 17 * s * fl, x - f * 3 * s, y - 17 * s * fl); c.quadraticCurveTo(x - f * 4 * s, y - 21 * s * fl, x - f * 7 * s, y - 25 * s * fl); c.fill();
+}
+function drawBoat(c, bx, by, s, f, o) {
+  c.fillStyle = 'rgba(31,29,27,.13)'; c.beginPath(); c.ellipse(bx, by + 6 * s, 28 * s, 3 * s, 0, 0, TAU); c.fill();
+  if (o.sail) {
+    c.strokeStyle = '#2a2622'; c.lineWidth = 1.1 * s; c.beginPath(); c.moveTo(bx - f * 2 * s, by - 3 * s); c.lineTo(bx - f * 2 * s, by - 64 * s); c.stroke();
+    c.fillStyle = 'rgba(214,202,174,.95)'; c.beginPath(); c.moveTo(bx - f * 1 * s, by - 60 * s); c.lineTo(bx + f * 18 * s, by - 55 * s); c.lineTo(bx + f * 21 * s, by - 13 * s); c.lineTo(bx - f * 1 * s, by - 11 * s); c.closePath(); c.fill();
+    c.lineWidth = .7 * s; c.stroke(); c.beginPath();
+    for (let q = 1; q < 6; q++) { const t = q / 6; c.moveTo(bx - f * s, lerp(by - 60 * s, by - 11 * s, t)); c.lineTo(bx + f * lerp(18, 21, t) * s, lerp(by - 55 * s, by - 13 * s, t)); } c.stroke();
+  }
+  c.fillStyle = '#24211e'; c.beginPath(); c.moveTo(bx + f * 27 * s, by - 7 * s); c.quadraticCurveTo(bx + f * 14 * s, by + 5 * s, bx - f * 4 * s, by + 4.5 * s);
+  c.quadraticCurveTo(bx - f * 20 * s, by + 4 * s, bx - f * 25 * s, by - 5 * s); c.quadraticCurveTo(bx, by - 2 * s, bx + f * 27 * s, by - 7 * s); c.fill();
+  if (o.cabin) {
+    c.fillStyle = '#4b463f'; c.beginPath(); c.moveTo(bx - f * 15 * s, by - 3 * s); c.quadraticCurveTo(bx - f * 6 * s, by - 19 * s, bx + f * 4 * s, by - 3 * s); c.closePath(); c.fill();
+    c.strokeStyle = paperA(.22); c.lineWidth = .5 * s; c.beginPath(); for (let q = 1; q < 5; q++) { const xx = bx - f * (15 - q * 3.8) * s; c.moveTo(xx, by - 3 * s); c.lineTo(xx + f * s, by - 12 * s); } c.stroke();
+  }
+  if (o.fisher) {
+    const fx = bx + f * 12 * s, fy = by - 4 * s;
+    c.fillStyle = '#35302b'; c.beginPath(); c.moveTo(fx - 4.5 * s, fy); c.lineTo(fx + 4.5 * s, fy); c.lineTo(fx + 1.2 * s, fy - 11 * s); c.lineTo(fx - 1.5 * s, fy - 11 * s); c.fill();
+    c.fillStyle = '#2a2622'; c.beginPath(); c.moveTo(fx - 6.5 * s, fy - 10.5 * s); c.quadraticCurveTo(fx, fy - 12 * s, fx + 6.5 * s, fy - 10.5 * s); c.lineTo(fx, fy - 16 * s); c.fill();
+    c.strokeStyle = '#2a2622';
+    if (o.rod) { c.lineWidth = .7 * s; c.beginPath(); c.moveTo(fx + f * 2 * s, fy - 7 * s); c.quadraticCurveTo(fx + f * 22 * s, fy - 25 * s, fx + f * 44 * s, fy - 27 * s); c.stroke();
+      c.lineWidth = .35 * s; c.globalAlpha = .6; c.beginPath(); c.moveTo(fx + f * 44 * s, fy - 27 * s); c.lineTo(fx + f * 47 * s, by + 3 * s); c.stroke(); c.globalAlpha = 1; }
+    else { c.lineWidth = .9 * s; c.beginPath(); c.moveTo(fx + f * 3 * s, fy - 16 * s); c.lineTo(fx - f * 12 * s, by + 8 * s); c.stroke(); }
+  }
+  if (o.lantern) { const lx = bx - f * 22 * s, ly = by - 12 * s; c.strokeStyle = '#2a2622'; c.lineWidth = .6 * s; c.beginPath(); c.moveTo(lx, by - 5 * s); c.lineTo(lx, ly - 3 * s); c.stroke();
+    c.fillStyle = '#c0452e'; c.beginPath(); c.ellipse(lx, ly, 2 * s, 2.6 * s, 0, 0, TAU); c.fill(); }
+}
+function worldBoats(cb) {
+  const a = Math.floor((V - 200) / 1100) - 1, b = Math.ceil((V + Wu + 200) / 1100) + 1;
+  for (let i = a; i <= b; i++) {
+    const r = rng(7, i, 2); if (r() > .55) continue;
+    const y = 832 + r() * 140; if (Math.abs(y - 905) < 22) continue;
+    const base = i * 1100 + r() * 700, amp = 60 + r() * 100, ph = r() * TAU, w = .015 + r() * .02, sail = r() < .4, lantern = r() < .6;
+    const bx = base + Math.sin(time * w + ph) * amp; if (bx > -T_PANEL - 60) continue;
+    cb({ x: bx, y, s: .5 + (y - 832) / 140 * .6, f: Math.cos(time * w + ph) >= 0 ? 1 : -1, sail, lantern, i });
+  }
+}
+function boatY() { return 905 + Math.sin(time * 1.3) * 1.3; }
+
+function tap(px, py) {
+  const ux = px / k, uy = (py - SY0) / k; if (uy < 0 || uy > 1000) return;
+  const xN = V + ux, yS = shoreAt(xN);
+  const ym = ridgeAt(LAYERS[1], V * LAYERS[1].p + ux), yf = ridgeAt(LAYERS[0], V * LAYERS[0].p + ux);
+  if (uy >= yS - 6 && uy <= 806) { startle(ux, uy); sfxNote(uy, 'land'); }
+  else if (uy > 800) {
+    const J = Jc();
+    kois.push({ x: xN, y: uy, t: 0, vx: (Math.random() < .5 ? -1 : 1) * (30 + Math.random() * 30), v0: 240 + Math.random() * 60, s: .8 + (uy - 800) / 200 * .6 });
+    ripples.push({ x: xN, y: uy, t: 0 }); if (seasonIdx(J) === 3) ripples.push({ x: xN + 6, y: uy + 2, t: -.3 });
+    sfxNote(uy, 'water');
+  } else if (uy > ym || uy > yf) { startle(ux, uy); sfxNote(uy, 'land'); }
+  else {
+    const n = 2 + Math.floor(Math.random() * 2);
+    for (let q = 0; q < n; q++) cranes.push({ x: ux + q * 26, y: uy + q * 14, vx: -(38 + Math.random() * 14), vy: -(10 + Math.random() * 8), s: .95 + Math.random() * .25, ph: Math.random() * TAU, t: 0 });
+    sfxNote(uy, 'sky');
+  }
+}
+function startle(ux, uy) {
+  const n = 7 + Math.floor(Math.random() * 6);
+  for (let q = 0; q < n; q++) { const a = -Math.PI / 2 + (Math.random() - .5) * 2.2, sp = 60 + Math.random() * 80;
+    sparrows.push({ x: ux, y: uy, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, ph: Math.random() * TAU, t: 0 }); }
+}
+function updateCreatures(dt) {
+  const J = Jc(), s = seasonIdx(J), L = light(J), par = vel * .3;
+  flockTimer -= dt;
+  if (!reduce && flockTimer <= 0 && flocks.length < 3) {
+    flockTimer = 16 + Math.random() * 22;
+    if (!(s === 3 && Math.random() < .7) && L.night < .7) {
+      const egret = s === 1 || (s === 0 && Math.random() < .5), n = egret ? 3 + Math.floor(Math.random() * 4) : 5 + Math.floor(Math.random() * 6);
+      const dir = Math.random() < .6 ? -1 : 1, fm = [];
+      for (let q = 0; q < n; q++) { const side = q % 2 ? 1 : -1, rank = Math.ceil(q / 2); fm.push([-dir * rank * 13 + (Math.random() - .5) * 3, side * rank * 7 * (egret ? .4 : 1) + rank * (egret ? 6 : 0)]); }
+      flocks.push({ x: dir < 0 ? Wu + 60 : -60, y: 120 + Math.random() * 230, vx: dir * (28 + Math.random() * 18), fm, egret, s: egret ? 1.1 : .8 + Math.random() * .3, ph: Math.random() * TAU });
+    }
+  }
+  for (let q = flocks.length - 1; q >= 0; q--) { const f = flocks[q]; f.x += (f.vx - par) * dt; f.ph += dt * (f.egret ? 4 : 6); f.y += Math.sin(time * .4 + q) * dt * 3;
+    if (f.x < -300 || f.x > Wu + 300) flocks.splice(q, 1); }
+  for (let q = cranes.length - 1; q >= 0; q--) { const c = cranes[q]; c.t += dt; c.x += (c.vx - par) * dt; c.y += c.vy * dt; c.ph += dt * 3.2; if (c.x < -120 || c.y < -60 || c.t > 30) cranes.splice(q, 1); }
+  for (let q = sparrows.length - 1; q >= 0; q--) { const b = sparrows[q]; b.t += dt; b.vy -= 25 * dt; b.x += (b.vx - par) * dt; b.y += b.vy * dt; b.ph += dt * 16; if (b.t > 5) sparrows.splice(q, 1); }
+  for (let q = kois.length - 1; q >= 0; q--) { const f = kois[q]; f.t += dt; if (f.t > (2 * f.v0) / 480) { ripples.push({ x: f.x + f.vx * f.t, y: f.y, t: 0 }); kois.splice(q, 1); } }
+  for (let q = ripples.length - 1; q >= 0; q--) { ripples[q].t += dt; if (ripples[q].t > 2.6) ripples.splice(q, 1); }
+  for (let q = notes.length - 1; q >= 0; q--) { notes[q].t += dt; if (notes[q].t > 1.4) notes.splice(q, 1); }
+}
+function drawWorldLive(c) {
+  c.setTransform(DPR * k, 0, 0, DPR * k, -V * k * DPR, SY0 * DPR);
+  const list = []; worldBoats(b => list.push(b)); list.sort((a, b) => a.y - b.y);
+  for (const b of list) drawBoat(c, b.x, b.y + Math.sin(time * 1.1 + b.i) * 1, b.s, b.f, { sail: b.sail, cabin: !b.sail, fisher: true, rod: !b.sail && b.i % 2 === 0, lantern: b.lantern });
+  c.lineCap = 'round';
+  for (const rp of ripples) { if (rp.t < 0) continue; const a = 1 - rp.t / 2.6; c.strokeStyle = `rgba(31,29,27,${.35 * a})`; c.lineWidth = 1;
+    for (let q = 0; q < 3; q++) { const rr = rp.t * 26 + q * 9; if (rr <= 0) continue; c.beginPath(); c.ellipse(rp.x, rp.y, rr, rr * .26, 0, 0, TAU); c.stroke(); } }
+  for (const f of kois) {
+    const x = f.x + f.vx * f.t, y = f.y - (f.v0 * f.t - 240 * f.t * f.t), ang = Math.atan2(-(f.v0 - 480 * f.t), f.vx), s = f.s;
+    c.save(); c.translate(x, y); c.rotate(ang);
+    c.fillStyle = '#d9542e'; c.beginPath(); c.moveTo(11 * s, 0); c.quadraticCurveTo(2 * s, -5.5 * s, -8 * s, -1.2 * s); c.lineTo(-15 * s, -5.5 * s); c.quadraticCurveTo(-12 * s, 0, -15 * s, 5.5 * s); c.lineTo(-8 * s, 1.2 * s); c.quadraticCurveTo(2 * s, 5.5 * s, 11 * s, 0); c.fill();
+    c.fillStyle = '#f4efe4'; c.beginPath(); c.ellipse(1 * s, -1 * s, 3.5 * s, 2 * s, .2, 0, TAU); c.fill();
+    c.fillStyle = '#1d1b19'; c.beginPath(); c.arc(7.5 * s, -1.2 * s, .8 * s, 0, TAU); c.fill();
+    c.restore();
+    if (f.t < .25 || f.t > (2 * f.v0) / 480 - .2) { c.fillStyle = 'rgba(60,80,90,.5)'; for (let q = 0; q < 5; q++) { c.beginPath(); c.arc(x + (q - 2) * 4, f.y - Math.abs(Math.sin(q * 7 + f.t * 20)) * 8, 1, 0, TAU); c.fill(); } }
+  }
+  // our boat and its wake
+  const bx = V + Wu * .5, by = boatY(), sp = clamp(-vel / 160, 0, 1);
+  if (sp > .02) { c.strokeStyle = `rgba(31,29,27,${.22 * sp})`; c.lineWidth = .9;
+    for (let q = 0; q < 2; q++) { c.beginPath(); c.moveTo(bx + 24, by + 3); c.quadraticCurveTo(bx + 60 + sp * 60, by + 3 + (q ? 6 : -2) * sp, bx + 90 + sp * 140, by + 4 + (q ? 16 : -4) * sp); c.stroke(); }
+    for (let q = 0; q < 5; q++) { const t = fract(time * .5 + q / 5), xx = bx + 30 + t * (80 + sp * 120); c.globalAlpha = (1 - t) * sp; c.beginPath(); c.moveTo(xx - 4, by + 5 + t * 6); c.lineTo(xx + 4, by + 5 + t * 6); c.stroke(); }
+    c.globalAlpha = 1; }
+  drawBoat(c, bx, by, 1.2, -1, { cabin: true, fisher: true, rod: true, lantern: true });
+}
+function drawSkyLive(c) {
+  c.setTransform(DPR * k, 0, 0, DPR * k, 0, SY0 * DPR);
+  for (const f of flocks) for (const [dx, dy] of f.fm) {
+    if (f.egret) { drawBird(c, f.x + dx, f.y + dy, f.s, f.ph + dx * .1, '#3a3530', 1.9); drawBird(c, f.x + dx, f.y + dy, f.s, f.ph + dx * .1, '#f6f2e8', 1.1); }
+    else drawBird(c, f.x + dx, f.y + dy, f.s, f.ph + dx * .1, 'rgba(34,31,28,.85)', 1.2);
+  }
+  for (const b of sparrows) drawBird(c, b.x, b.y, .55, b.ph, `rgba(30,28,25,${clamp(1.4 - b.t / 4, 0, 1)})`, 1.4);
+  for (const cr of cranes) drawCrane(c, cr.x, cr.y, cr.s, cr.ph, -1);
+}
+
+/* ---------------- lighting, sky, weather ---------------- */
+function tintAt(J) {
+  const L = light(J), rain = rainAt(J);
+  let r = 1, g = 1, b = 1;
+  const n = L.night * .8; r = r * (1 - n) + n * .16; g = g * (1 - n) + n * .2; b = b * (1 - n) + n * .36;
+  const d = L.dusk * .42; g *= (1 - d) + d * .72; b *= (1 - d) + d * .5;
+  const a = L.dawn * .3; g *= (1 - a) + a * .85; b *= (1 - a) + a * .82;
+  const rr = rain * .16; r *= 1 - rr; g *= 1 - rr * .9; b *= 1 - rr * .7;
+  if (seasonIdx(J) === 3) { r *= .97; g *= .985; }
+  return `rgb(${Math.round(r * 255)},${Math.round(g * 255)},${Math.round(b * 255)})`;
+}
+function drawTint(c, xr) {
+  c.setTransform(DPR, 0, 0, DPR, 0, 0);
+  const g = c.createLinearGradient(0, 0, W, 0), N = 24;
+  for (let q = 0; q <= N; q++) g.addColorStop(q / N, tintAt(-(V + (q / N * W) / k)));
+  c.globalCompositeOperation = 'multiply'; c.fillStyle = g; c.fillRect(0, SY0, xr, SY1 - SY0); c.globalCompositeOperation = 'source-over';
+}
+function celestial(tau, pS) {
+  const J = Jc(), out = [];
+  const m0 = Math.floor(J / DAY) - 1;
+  for (let m = m0; m <= m0 + 2; m++) { const Je = (m + tau - .4) * DAY, dJ = J - Je, xs = Wu / 2 + dJ * pS; if (Math.abs(dJ) < 2200) out.push({ xs, dJ }); }
+  return out;
+}
+function drawSky(c, xr) {
+  const nightL = nightAtX(0), nightR = nightAtX(Wu), nightC = nightAtX(Wu / 2);
+  const moons = celestial(0, .35), suns = celestial(.8, .3).concat(celestial(.2, .3));
+  if (Math.max(nightL, nightR, nightC) < .02 && !suns.length) return;
+  c.setTransform(DPR, 0, 0, DPR, 0, 0);
+  const L0 = LAYERS[0], L1 = LAYERS[1];
+  c.save(); c.beginPath(); c.moveTo(0, SY0);
+  for (let px = 0; px <= W + 6; px += 6) { const ux = px / k; const y = Math.min(ridgeAt(L0, V * L0.p + ux), ridgeAt(L1, V * L1.p + ux), shoreAt(V + ux), 800); c.lineTo(px, SY0 + y * k); }
+  c.lineTo(W, SY0); c.closePath(); c.clip();
+  const dusk = Math.max(light(Jc()).dusk, light(Jc()).dawn * .7);
+  if (dusk > .01) { const g = c.createLinearGradient(0, SY0 + 250 * k, 0, SY0 + 800 * k); g.addColorStop(0, 'rgba(240,150,90,0)'); g.addColorStop(1, `rgba(236,138,80,${.4 * dusk})`); c.globalCompositeOperation = 'screen'; c.fillStyle = g; c.fillRect(0, SY0, xr, 800 * k); }
+  c.globalCompositeOperation = 'lighter';
+  for (const st of stars) { const ux = mod(st.x - V * .05, 3000); if (ux > Wu) continue; const nt = nightAtX(ux); if (nt < .05) continue;
+    const a = nt * (.45 + .45 * Math.sin(time * st.f + st.ph)); c.fillStyle = `rgba(255,248,225,${a})`; c.beginPath(); c.arc(ux * k, SY0 + st.y * k, st.r * k * 1.3, 0, TAU); c.fill(); }
+  for (const m of moons) {
+    const nt = nightAtX(m.xs); if (nt < .03) continue;
+    const mx = m.xs * k, my = SY0 + (150 + Math.pow(m.dJ / 1500, 2) * 260) * k, R = 30 * k;
+    const g = c.createRadialGradient(mx, my, R * .8, mx, my, R * 5); g.addColorStop(0, `rgba(240,236,210,${.28 * nt})`); g.addColorStop(1, 'rgba(240,236,210,0)'); c.fillStyle = g; c.fillRect(mx - R * 5, my - R * 5, R * 10, R * 10);
+    c.globalCompositeOperation = 'source-over'; c.fillStyle = `rgba(246,240,220,${.96 * nt})`; c.beginPath(); c.arc(mx, my, R, 0, TAU); c.fill();
+    c.fillStyle = `rgba(190,180,150,${.28 * nt})`; for (const [dx, dy, rr] of [[-.3, -.2, .28], [.25, .1, .2], [-.05, .35, .16], [.35, -.35, .12]]) { c.beginPath(); c.arc(mx + dx * R, my + dy * R, rr * R, 0, TAU); c.fill(); }
+    c.globalCompositeOperation = 'lighter';
+  }
+  c.globalCompositeOperation = 'source-over';
+  for (const s of suns) {
+    const L = light(-(V + s.xs)), a = Math.max(L.dusk, L.dawn); if (a < .03) continue;
+    const sx = s.xs * k, sy = SY0 + (520 + Math.pow(s.dJ / 1400, 2) * 200) * k, R = 26 * k;
+    const g = c.createRadialGradient(sx, sy, R, sx, sy, R * 4); g.addColorStop(0, `rgba(230,120,70,${.3 * a})`); g.addColorStop(1, 'rgba(230,120,70,0)'); c.fillStyle = g; c.fillRect(sx - R * 4, sy - R * 4, R * 8, R * 8);
+    c.fillStyle = `rgba(200,62,40,${.88 * a})`; c.beginPath(); c.arc(sx, sy, R, 0, TAU); c.fill();
+  }
+  c.restore();
+}
+function glow(c, x, y, r, a) {
+  const g = c.createRadialGradient(x, y, 0, x, y, r * 3); g.addColorStop(0, `rgba(255,206,130,${.95 * a})`); g.addColorStop(.25, `rgba(240,150,70,${.38 * a})`); g.addColorStop(1, 'rgba(240,150,70,0)');
+  c.fillStyle = g; c.fillRect(x - r * 3, y - r * 3, r * 6, r * 6);
+}
+function drawLights(c) {
+  const nL = nightAtX(0), nR = nightAtX(Wu), nC = nightAtX(Wu / 2);
+  const anyNight = Math.max(nL, nR, nC) > .05;
+  c.setTransform(DPR, 0, 0, DPR, 0, 0); c.globalCompositeOperation = 'lighter';
+  if (anyNight) {
+    eachShore(V - 50, V + Wu + 50, o => { for (const lt of o.lights) { const ux = lt.x - V, nt = nightAtX(ux); if (nt < .05) continue;
+      const fl = .85 + .15 * Math.sin(time * 7 + lt.x); glow(c, ux * k, SY0 + lt.y * k, lt.r * k, nt * fl);
+      glow(c, ux * k, SY0 + (800 + (800 - lt.y) * .5) * k, lt.r * k * .7, nt * .35); } });
+    const L1 = LAYERS[1];
+    eachMountain(L1, V * L1.p - 20, V * L1.p + Wu + 20, o => { for (const lt of o.lights) { const ux = lt.x - V * L1.p, nt = nightAtX(ux); if (nt > .05) glow(c, ux * k, SY0 + lt.y * k, lt.r * k * .8, nt * .9); } });
+    worldBoats(b => { if (!b.lantern) return; const nt = nightAtX(b.x - V); if (nt < .05) return; glow(c, (b.x - V - b.f * 22 * b.s) * k, SY0 + (b.y - 12 * b.s) * k, 5 * b.s * k, nt); });
+    const nt = nC; if (nt > .05) { glow(c, (Wu * .5 + 22 * 1.2) * k, SY0 + (boatY() - 14.4) * k, 7 * k, nt); glow(c, (Wu * .5 + 26) * k, SY0 + 925 * k, 5 * k, nt * .4); }
+    for (const m of celestial(0, .35)) { const n2 = nightAtX(m.xs); if (n2 < .05) continue; shimmer(c, m.xs, `rgba(240,236,215,`, n2 * .55); }
+  }
+  for (const s of celestial(.8, .3).concat(celestial(.2, .3))) { const L = light(-(V + s.xs)), a = Math.max(L.dusk, L.dawn); if (a > .05) shimmer(c, s.xs, 'rgba(236,120,70,', a * .5); }
+  c.globalCompositeOperation = 'source-over';
+}
+function shimmer(c, xs, col, a) {
+  for (let q = 0; q < 22; q++) { const t = q / 22, y = 806 + t * 190, w = (8 + t * 60) * (.6 + .4 * Math.sin(time * 1.7 + q * 2.1)), xo = Math.sin(time * .9 + q * 1.3) * (4 + t * 16);
+    c.fillStyle = col + (a * (1 - t * .6) * (.5 + .5 * Math.sin(time * 3 + q))) + ')'; c.fillRect((xs + xo - w / 2) * k, SY0 + y * k, w * k, 1.4 * k); }
+}
+function updateWeather(dt) {
+  const J = Jc(), s = seasonIdx(J), L = light(J), rain = rainAt(J), snow = snowAt(J), m = reduce ? .25 : 1;
+  const want = { rain: rain * 170 * m, snow: snow * 150 * m, petal: s === 0 && L.day > .3 ? 16 * m : 0, leaf: s === 2 ? 22 * m : 0, fly: s === 1 && L.night > .5 ? 28 * m : 0 };
+  const cnt = { rain: 0, snow: 0, petal: 0, leaf: 0, fly: 0 };
+  for (const p of parts) cnt[p.type]++;
+  for (const type in want) {
+    let need = Math.min(6, Math.floor(want[type] - cnt[type]));
+    while (need-- > 0) {
+      const p = { type, x: Math.random() * (Wu + 200) - 100, y: type === 'fly' ? 600 + Math.random() * 380 : -20 - Math.random() * 200, ph: Math.random() * TAU, rot: Math.random() * TAU, dead: false };
+      if (type === 'rain') { p.vx = -90; p.vy = 950 + Math.random() * 200; p.y = Math.random() * 1000 - 200; }
+      else if (type === 'snow') { p.vx = -14; p.vy = 34 + Math.random() * 40; p.r = 1 + Math.random() * 2.2; p.y = Math.random() * 900 - 100; }
+      else if (type === 'petal') { p.vx = -26; p.vy = 26 + Math.random() * 18; p.col = Math.random() < .5 ? '#eaa7ad' : '#f3d5d2'; }
+      else if (type === 'leaf') { p.vx = -30; p.vy = 36 + Math.random() * 24; p.col = LEAF.maple[Math.floor(Math.random() * 4)]; }
+      else { p.vx = 0; p.vy = 0; }
+      parts.push(p);
+    }
+    if (cnt[type] > want[type] + 2) { let extra = cnt[type] - Math.ceil(want[type]); for (const p of parts) if (extra > 0 && p.type === type && !p.dead) { p.dead = true; extra--; } }
+  }
+  const par = vel * .9;
+  for (let q = parts.length - 1; q >= 0; q--) {
+    const p = parts[q]; p.ph += dt;
+    if (p.type === 'fly') { p.x += (Math.sin(p.ph * .7 + p.rot) * 12 - vel) * dt; p.y += Math.cos(p.ph * .9 + p.rot) * 8 * dt; }
+    else { p.x += (p.vx + (p.type !== 'rain' ? Math.sin(p.ph * 1.3 + p.rot) * 18 : 0) - par) * dt; p.y += p.vy * dt; p.rot += dt * 2; }
+    const out = p.y > 1010 || p.x < -140 || p.x > Wu + 140;
+    if (out || (p.dead && (p.y < 0 || p.type === 'fly' || Math.random() < dt))) {
+      if (out && !p.dead && p.type !== 'fly') { p.y = -10 - Math.random() * 40; p.x = Math.random() * (Wu + 200) - 100; }
+      else if (out && !p.dead) { p.x = Math.random() * Wu; }
+      else parts.splice(q, 1);
+    }
+  }
+}
+function drawWeather(c) {
+  c.setTransform(DPR * k, 0, 0, DPR * k, 0, SY0 * DPR);
+  c.lineCap = 'round';
+  c.strokeStyle = 'rgba(66,76,90,.38)'; c.lineWidth = .8; c.beginPath();
+  for (const p of parts) if (p.type === 'rain') { c.moveTo(p.x, p.y); c.lineTo(p.x - 1.8, p.y + 20); } c.stroke();
+  c.fillStyle = 'rgba(252,251,247,.92)'; c.beginPath();
+  for (const p of parts) if (p.type === 'snow') { c.moveTo(p.x + p.r, p.y); c.arc(p.x, p.y, p.r, 0, TAU); } c.fill();
+  for (const p of parts) if (p.type === 'petal' || p.type === 'leaf') {
+    c.fillStyle = p.col; c.globalAlpha = .9; c.beginPath();
+    if (p.type === 'petal') c.ellipse(p.x, p.y, 2.6, 1.4 * Math.abs(Math.cos(p.rot)) + .4, p.rot, 0, TAU);
+    else { const s = 3.4, cs = Math.cos(p.rot), sn = Math.sin(p.rot) * .6; c.moveTo(p.x - s * cs, p.y - s * sn); c.quadraticCurveTo(p.x, p.y - s, p.x + s * cs, p.y + s * sn); c.quadraticCurveTo(p.x, p.y + s, p.x - s * cs, p.y - s * sn); }
+    c.fill();
+  }
+  c.globalAlpha = 1;
+  c.globalCompositeOperation = 'lighter';
+  for (const p of parts) if (p.type === 'fly') { const a = .5 + .5 * Math.sin(p.ph * 3 + p.rot * 5); const g = c.createRadialGradient(p.x, p.y, 0, p.x, p.y, 7); g.addColorStop(0, `rgba(240,236,150,${.9 * a})`); g.addColorStop(1, 'rgba(240,236,150,0)'); c.fillStyle = g; c.fillRect(p.x - 7, p.y - 7, 14, 14); }
+  c.globalCompositeOperation = 'source-over';
+}
+function drawMist(c, L) {
+  const lv = V * L.p, sp = 460, drift = time * L.drift;
+  c.setTransform(DPR * k, 0, 0, DPR * k, -lv * k * DPR, SY0 * DPR);
+  const a = Math.floor((lv - 900 - drift) / sp), b = Math.ceil((lv + Wu + 100 - drift) / sp);
+  for (let i = a; i <= b; i++) { const r = rng(9, L.id, i, 0); if (r() > .6) continue;
+    const xx = i * sp + r() * sp + drift, yy = L.mistY + r() * 50, w = 380 + r() * 460; c.globalAlpha = .55 + r() * .4; c.drawImage(mistSprite, xx, yy - w * .12, w, w * .25); }
+  c.globalAlpha = 1;
+}
+function drawPlayhead(c) {
+  if (!A.on) return;
+  c.setTransform(DPR * k, 0, 0, DPR * k, 0, SY0 * DPR);
+  const x = Wu * .5 - 14.4, y = play.y;
+  if (y == null) return;
+  c.strokeStyle = 'rgba(179,50,43,.45)'; c.lineWidth = .9; c.setLineDash([3, 5]);
+  c.beginPath(); c.moveTo(x, boatY() - 30); c.lineTo(x, y); c.stroke(); c.setLineDash([]);
+  c.fillStyle = 'rgba(179,50,43,.8)'; c.beginPath(); c.arc(x, y, 3 + play.flash * 3, 0, TAU); c.fill();
+  for (const nt of notes) { const a = 1 - nt.t / 1.4; c.strokeStyle = `rgba(179,50,43,${.6 * a})`; c.lineWidth = 1.2; c.beginPath(); c.arc(x, nt.y, 4 + nt.t * 26, 0, TAU); c.stroke(); }
+}
+
+/* ---------------- scroll frame: borders & rollers ---------------- */
+function drawFrame(c, xr) {
+  c.setTransform(DPR, 0, 0, DPR, 0, 0);
+  const bh = 16 * k, dist = Math.max(0, -(V + Wu)), RL = Math.max(18, 30 * k), RR = Math.min(34, 12 + 7 * Math.log2(1 + dist / 3000)) * Math.max(.7, k);
+  const xe = xr >= W - 1 ? W : xr;
+  const band = (y) => { c.fillStyle = '#b1b5a2'; c.fillRect(0, y, xe, bh); c.fillStyle = 'rgba(80,84,68,.12)'; for (let q = 3; q < bh; q += 3) c.fillRect(0, y + q, xe, .6);
+    c.fillStyle = 'rgba(58,60,48,.55)'; c.fillRect(0, y, xe, 1); c.fillRect(0, y + bh - 1, xe, 1); };
+  band(SY0); band(SY1 - bh);
+  const cyl = (x0, w, dark) => { const g = c.createLinearGradient(x0, 0, x0 + w, 0);
+    g.addColorStop(0, dark ? '#4e4536' : '#6d6450'); g.addColorStop(.35, '#efe6cf'); g.addColorStop(.6, '#c8bc9e'); g.addColorStop(1, dark ? '#3e362a' : '#5d5445');
+    c.fillStyle = g; c.fillRect(x0, SY0 - 1, w, SY1 - SY0 + 2); c.fillStyle = 'rgba(60,62,50,.35)'; c.fillRect(x0, SY0, w, bh * .7); c.fillRect(x0, SY1 - bh * .7, w, bh * .7); };
+  cyl(0, RL, true);
+  const knob = (x0, w) => { const g = c.createLinearGradient(x0, 0, x0 + w, 0); g.addColorStop(0, '#3f5a4c'); g.addColorStop(.4, '#9fc0ac'); g.addColorStop(1, '#2f463a');
+    c.fillStyle = g; c.fillRect(x0, SY0 - PAD + 2, w, PAD - 2); c.fillRect(x0, SY1, w, PAD - 2); };
+  knob(RL * .22, RL * .56);
+  c.fillStyle = 'rgba(0,0,0,.25)'; c.fillRect(RL, SY0, 4, SY1 - SY0);
+  if (xr >= W - 1) { cyl(W - RR, RR, false); c.fillStyle = 'rgba(0,0,0,.22)'; c.fillRect(W - RR - 4, SY0, 4, SY1 - SY0); }
+  else {
+    const g = c.createLinearGradient(xr - 4, 0, xr + 6, 0); g.addColorStop(0, '#3c2a1c'); g.addColorStop(.45, '#8a6344'); g.addColorStop(1, '#2e2016');
+    c.fillStyle = g; c.fillRect(xr - 4, SY0 - 3, 10, SY1 - SY0 + 6);
+    const my = (SY0 + SY1) / 2; c.strokeStyle = '#6b4f7a'; c.lineWidth = 3; c.beginPath(); c.moveTo(xr + 6, my); c.quadraticCurveTo(xr + 30, my + 10, xr + 46, my + 40); c.stroke();
+    c.fillStyle = '#8fb39e'; c.fillRect(xr + 40, my + 40, 12, 26); c.fillStyle = 'rgba(255,255,255,.3)'; c.fillRect(xr + 42, my + 42, 3, 22);
+  }
+}
+
+/* ---------------- audio ---------------- */
+const A = { on: false, ctx: null };
+const play = { y: null, flash: 0 };
+const mtof = m => 440 * Math.pow(2, (m - 69) / 12);
+const PENT = [0, 2, 4, 7, 9];
+const pent = (base, n) => base + 12 * Math.floor(n / 5) + PENT[mod(n, 5)];
+function audioInit() {
+  const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return false;
+  const ac = new AC(); A.ctx = ac;
+  A.master = ac.createGain(); A.master.gain.value = 0;
+  const comp = ac.createDynamicsCompressor(); comp.threshold.value = -16; comp.ratio.value = 3;
+  A.master.connect(comp); comp.connect(ac.destination);
+  const sr = ac.sampleRate, irLen = Math.floor(sr * 3.4), ir = ac.createBuffer(2, irLen, sr);
+  for (let ch = 0; ch < 2; ch++) { const d = ir.getChannelData(ch); for (let i = 0; i < irLen; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / irLen, 3.2); }
+  A.rev = ac.createConvolver(); A.rev.buffer = ir; const rg = ac.createGain(); rg.gain.value = .45; A.rev.connect(rg); rg.connect(A.master);
+  A.bus = ac.createGain();
+  const body = ac.createBiquadFilter(); body.type = 'peaking'; body.frequency.value = 220; body.Q.value = 1; body.gain.value = 4;
+  const lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 4200;
+  A.bus.connect(body); body.connect(lp); lp.connect(A.master); lp.connect(A.rev);
+  const nb = ac.createBuffer(1, sr * 3, sr), nd = nb.getChannelData(0); let last = 0;
+  for (let i = 0; i < nd.length; i++) { const w = Math.random() * 2 - 1; last = (last + .02 * w) / 1.02; nd[i] = last * 3.5; }
+  const wb = ac.createBuffer(1, sr * 3, sr), wd = wb.getChannelData(0); for (let i = 0; i < wd.length; i++) wd[i] = Math.random() * 2 - 1;
+  const chain = (buf, type, f, q) => { const s = ac.createBufferSource(); s.buffer = buf; s.loop = true; const fl = ac.createBiquadFilter(); fl.type = type; fl.frequency.value = f; if (q) fl.Q.value = q;
+    const g = ac.createGain(); g.gain.value = 0; s.connect(fl); fl.connect(g); g.connect(A.master); s.start(); return g; };
+  A.water = chain(nb, 'lowpass', 520); A.rain = chain(wb, 'bandpass', 2600, .5); A.wind = chain(wb, 'bandpass', 520, .7); A.fall = chain(nb, 'bandpass', 900, .4);
+  A.bufs = new Map(); A.nextAmb = 0;
+  return true;
+}
+function ks(midi) {
+  if (A.bufs.has(midi)) return A.bufs.get(midi);
+  const ac = A.ctx, sr = ac.sampleRate, f = mtof(midi), N = Math.max(2, Math.round(sr / f - .5)), len = Math.floor(sr * (midi < 50 ? 5 : 3.6));
+  const b = ac.createBuffer(1, len, sr), d = b.getChannelData(0); let lp = 0; const br = midi > 66 ? .62 : .45;
+  for (let i = 0; i <= N; i++) { lp += br * ((Math.random() * 2 - 1) - lp); d[i] = lp; }
+  const rho = midi < 50 ? .9992 : .9982;
+  for (let i = N + 1; i < len; i++) d[i] = rho * .5 * (d[i - N] + d[i - N - 1]);
+  let mx = 1e-6; for (let i = 0; i < Math.min(len, N * 6); i++) mx = Math.max(mx, Math.abs(d[i]));
+  const gg = .8 / mx; for (let i = 0; i < len; i++) d[i] *= gg;
+  const o = { b, rate: f * (N + .5) / sr }; A.bufs.set(midi, o); return o;
+}
+function panNode(p) { const ac = A.ctx; if (ac.createStereoPanner) { const n = ac.createStereoPanner(); n.pan.value = clamp(p, -1, 1); return n; } return ac.createGain(); }
+function pluck(midi, vel, slide, pan) {
+  const ac = A.ctx, t = ac.currentTime + .01, { b, rate } = ks(midi);
+  const src = ac.createBufferSource(); src.buffer = b;
+  if (slide) {
+    src.playbackRate.setValueAtTime(rate * Math.pow(2, -1.3 / 12), t); src.playbackRate.exponentialRampToValueAtTime(rate, t + .11);
+    try { const lfo = ac.createOscillator(), lg = ac.createGain(); lfo.frequency.value = 4.5 + Math.random(); lg.gain.setValueAtTime(0, t); lg.gain.linearRampToValueAtTime(14, t + .45); lg.gain.linearRampToValueAtTime(0, t + 2.2);
+      lfo.connect(lg); lg.connect(src.detune); lfo.start(t); lfo.stop(t + 2.4); } catch (e) {}
+  } else src.playbackRate.value = rate;
+  const g = ac.createGain(); g.gain.setValueAtTime(vel, t); g.gain.setTargetAtTime(0, t + (slide ? 2.2 : 3), .45);
+  const p = panNode(pan); src.connect(g); g.connect(p); p.connect(A.bus); src.start(t); src.stop(t + b.duration);
+}
+function harmonic(midi, vel, when, pan) {
+  const ac = A.ctx, t = ac.currentTime + .01 + (when || 0), f = mtof(midi), p = panNode(pan || 0); p.connect(A.master); p.connect(A.rev);
+  for (const [m, a] of [[1, 1], [2, .22], [3, .07]]) { const o = ac.createOscillator(), g = ac.createGain(); o.frequency.value = f * m;
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vel * a, t + .006); g.gain.exponentialRampToValueAtTime(.0001, t + 2.8 / m); o.connect(g); g.connect(p); o.start(t); o.stop(t + 2.9); }
+}
+function bell() {
+  const ac = A.ctx, t = ac.currentTime + .01, f = 98 * (1 + (Math.random() - .5) * .02);
+  for (const [m, a, d] of [[.5, .1, 7], [1, .2, 6], [2.76, .09, 4], [5.4, .05, 2.6], [8.93, .025, 1.6]]) { const o = ac.createOscillator(), g = ac.createGain(); o.frequency.value = f * m;
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(a, t + .01); g.gain.exponentialRampToValueAtTime(.0001, t + d); o.connect(g); g.connect(A.master); g.connect(A.rev); o.start(t); o.stop(t + d); }
+}
+function chirp(cricket) {
+  const ac = A.ctx, t0 = ac.currentTime + .01, p = panNode((Math.random() - .5) * 1.4); p.connect(A.master); p.connect(A.rev);
+  const n = cricket ? 3 : 2 + Math.floor(Math.random() * 3), f0 = cricket ? 4300 + Math.random() * 300 : 2600 + Math.random() * 1800;
+  for (let j = 0; j < n; j++) { const o = ac.createOscillator(), g = ac.createGain(), t = t0 + j * (cricket ? .045 : .09);
+    o.frequency.setValueAtTime(f0, t); if (!cricket) o.frequency.exponentialRampToValueAtTime(f0 * 1.35, t + .05);
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(cricket ? .018 : .035, t + .006); g.gain.exponentialRampToValueAtTime(.0003, t + (cricket ? .03 : .07));
+    o.connect(g); g.connect(p); o.start(t); o.stop(t + .09); }
+}
+function sfxNote(uy, kind) {
+  if (!A.on) return;
+  const m = MODES[seasonIdx(Jc())].d;
+  if (kind === 'sky') { const base = m + 10 + Math.floor((1 - uy / 800) * 4); [0, 2, 4].forEach((d, q) => harmonic(pent(65, base + d - 10), .11, q * .14, (Math.random() - .5) * .6)); }
+  else if (kind === 'water') { pluck(pent(41, m), .5, false, 0); harmonic(pent(77, m + 2), .06, .5, .3); }
+  else pluck(pent(53, m + Math.floor(clamp((800 - uy) / 700, 0, 1) * 10)), .5, true, 0);
+}
+let melLast = -9, melT = 0, bassCell = null, prevLx1 = null, prevX = null;
+function musicTick() {
+  if (!A.on || !A.ctx) return;
+  const ac = A.ctx, now = ac.currentTime, J = Jc(), s = seasonIdx(J), m = MODES[s].d, L1 = LAYERS[1], L0 = LAYERS[0];
+  play.flash = Math.max(0, play.flash - .06);
+  const lx1 = V * L1.p + Wu * .5 - 14.4 * L1.p;
+  let y = ridgeAt(L1, V * L1.p + Wu * .5 - 14.4), src = 1;
+  if (!isFinite(y)) { y = ridgeAt(L0, V * L0.p + Wu * .5 - 14.4); src = 0; }
+  play.y = isFinite(y) ? y : null;
+  if (isFinite(y)) {
+    const t = clamp(((src ? 800 : 700) - y) / (src ? 700 : 600), 0, 1), q = t * 12;
+    if (melLast < 0 || Math.abs(q - (melLast + .5)) > .85) {
+      const idx = clamp(Math.floor(q), 0, 11);
+      if (idx !== melLast && now - melT > .12) { pluck(pent(53, m + idx + (src ? 0 : -3)), (.26 + .34 * t) * (src ? 1 : .7), Math.random() < .45, (Math.random() - .5) * .3);
+        melLast = idx; melT = now; play.flash = 1; notes.push({ y, t: 0 }); }
+    }
+  } else melLast = -9;
+  const cell = Math.floor(J / 640);
+  if (bassCell !== null && cell !== bassCell && Math.abs(vel) < 900) pluck(pent(41, cell & 1 ? m + 3 : m), .4, false, -.15);
+  bassCell = cell;
+  const X = V + Wu * .5;
+  if (prevX !== null && Math.abs(X - prevX) < 400) {
+    const lo = Math.min(X, prevX), hi = Math.max(X, prevX);
+    for (let j = Math.max(0, Math.floor((-T_PANEL - POEM_OFF - hi) / 2300)); j <= Math.ceil((-T_PANEL - POEM_OFF - lo) / 2300); j++) {
+      const px = poemX(j); if (px > lo && px <= hi) [0, 2, 4, 5].forEach((d, q) => harmonic(pent(65, m + d), .1, q * .18, (q - 1.5) * .3)); }
+    if (prevLx1 !== null) { const a = Math.min(lx1, prevLx1), b = Math.max(lx1, prevLx1);
+      eachMountain(L1, a - 1, b + 1, o => { if (o.pagoda && o.pagoda.x > a && o.pagoda.x <= b) bell(); if (o.temple && o.temple.x > a && o.temple.x <= b) bell(); }); }
+  }
+  prevX = X; prevLx1 = lx1;
+  if (now > A.nextAmb) {
+    A.nextAmb = now + .25; const L = light(J);
+    let fall = 0; eachMountain(L1, lx1 - 250, lx1 + 250, o => { if (o.fall) fall = Math.max(fall, 1 - Math.abs(o.fall.x - lx1) / 250); });
+    A.water.gain.setTargetAtTime(.05 + .02 * Math.sin(time * .3), now, .5); A.rain.gain.setTargetAtTime(rainAt(J) * .1, now, .8);
+    A.wind.gain.setTargetAtTime(s === 3 ? .035 + snowAt(J) * .03 : .012, now, .8); A.fall.gain.setTargetAtTime(fall * .09, now, .5);
+    if (Math.random() < .06 && L.day > .5 && s < 2) chirp(false);
+    if (Math.random() < .09 && L.night > .5 && (s === 1 || s === 2)) chirp(true);
+  }
+}
+function setSound(on) {
+  if (on && !A.ctx && !audioInit()) return;
+  A.on = on; const b = $('#bSound'); b.textContent = on ? '止琴' : '听琴'; b.setAttribute('aria-pressed', String(on)); b.classList.add('used');
+  if (!A.ctx) return;
+  const t = A.ctx.currentTime;
+  if (on) { A.ctx.resume(); A.master.gain.cancelScheduledValues(t); A.master.gain.setTargetAtTime(.9, t, .2); melLast = -9; bassCell = null; prevX = null; prevLx1 = null;
+    const m = MODES[seasonIdx(Jc())].d; [0, 2, 4, 7].forEach((d, q) => harmonic(pent(65, m + d), .1, q * .2, (q - 1.5) * .3)); }
+  else { A.master.gain.cancelScheduledValues(t); A.master.gain.setTargetAtTime(0, t, .15); }
+}
+
+/* ---------------- main render ---------------- */
+function render() {
+  const c = ctx;
+  c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, cv.width, cv.height);
+  const xr = Math.min(W, -V * k);
+  c.save(); c.setTransform(DPR, 0, 0, DPR, 0, 0); c.beginPath(); c.rect(0, SY0, Math.max(0, xr), SY1 - SY0); c.clip();
+  c.setTransform(1, 0, 0, 1, 0, 0);
+  paperPat.setTransform(new DOMMatrix([1, 0, 0, 1, Math.round(-V * k * DPR) % paperTile.width, 0]));
+  c.fillStyle = paperPat; c.fillRect(0, SY0 * DPR, xr * DPR, (SY1 - SY0) * DPR);
+  drawLayer(LAYERS[0]); drawMist(c, LAYERS[0]);
+  drawLayer(LAYERS[1]); drawMist(c, LAYERS[1]);
+  drawLayer(LAYERS[2]);
+  drawWorldLive(c);
+  drawSkyLive(c);
+  drawPanel(c);
+  c.setTransform(1, 0, 0, 1, 0, 0); c.drawImage(vignette, 0, SY0 * DPR, xr * DPR, (SY1 - SY0) * DPR);
+  drawTint(c, xr);
+  drawSky(c, xr);
+  drawLights(c);
+  drawWeather(c);
+  drawPoems(c);
+  drawPlayhead(c);
+  if (fade > 0) { c.setTransform(DPR, 0, 0, DPR, 0, 0); c.fillStyle = paperA(fade); c.fillRect(0, SY0, xr, SY1 - SY0); }
+  c.restore();
+  drawFrame(c, xr);
+}
+
+/* ---------------- loop & input ---------------- */
+let lastTs = 0, hudT = 0, dragging = false, lastPX = 0, lastPT = 0, moved = 0, downX = 0, downY = 0, flingV = 0;
+const Vmax = () => -Wu + 50;
+function frame(ts) {
+  frameStart = performance.now();
+  const dt = Math.min(.05, lastTs ? (ts - lastTs) / 1000 : .016); lastTs = ts; time += dt;
+  if (fadeDir) { fade = clamp(fade + fadeDir * dt * 3.2, 0, 1); if (fade >= 1 && fadeDir > 0) { fadeCb && fadeCb(); fadeCb = null; fadeDir = -1; forceRender = 2; } else if (fade <= 0 && fadeDir < 0) fadeDir = 0; }
+  if (!dragging) {
+    const target = auto && time - lastInteract > 1.5 ? -SPEEDS[speedIdx] : 0;
+    vel += (target - vel) * Math.min(1, dt * (Math.abs(vel) > Math.abs(target) ? 1.6 : 1.1));
+    V += vel * dt;
+  }
+  if (V > Vmax()) { V = Vmax(); if (vel > 0) vel = 0; }
+  updateCreatures(dt); updateWeather(dt); musicTick();
+  render();
+  if (forceRender) forceRender--;
+  hudT -= dt; if (hudT <= 0) { hudT = .3; updateHUD(); }
+  requestAnimationFrame(frame);
+}
+const statusEl = $('#status'), seasonBtns = [...document.querySelectorAll('.seasons button')];
+function updateHUD() {
+  const J = Jc(), s = seasonIdx(J), t = todOf(J), sc = SHICHEN[Math.floor(mod(t * 24 + 1, 24) / 2)], li = Math.max(0, -(V + Wu)) / 1000;
+  statusEl.innerHTML = `<b>${termOf(J)}</b> · ${sc}时 · ${SEASONS[s]}·${MODES[s].n}调 · 已行 <b>${li.toFixed(1)}</b> 里`;
+  seasonBtns.forEach((b, q) => b.setAttribute('aria-pressed', String(q === s)));
+}
+function hideHint() { $('#hint').classList.add('gone'); }
+setTimeout(hideHint, 9000);
+cv.addEventListener('pointerdown', e => { try { cv.setPointerCapture(e.pointerId); } catch (_) {} dragging = true; downX = lastPX = e.clientX; downY = e.clientY; lastPT = performance.now(); moved = 0; flingV = 0; vel = 0; lastInteract = time; });
+cv.addEventListener('pointermove', e => {
+  if (!dragging) return; const dx = e.clientX - lastPX, now = performance.now(), dtp = Math.max(1, now - lastPT) / 1000;
+  V -= dx / k; moved += Math.abs(dx); flingV = lerp(flingV, -(dx / k) / dtp, .5); lastPX = e.clientX; lastPT = now; lastInteract = time;
+  if (moved > 8) hideHint();
+});
+const endDrag = e => {
+  if (!dragging) return; dragging = false; lastInteract = time;
+  if (moved < 7 && Math.abs(e.clientY - downY) < 7) { const rct = cv.getBoundingClientRect(); tap(e.clientX - rct.left, e.clientY - rct.top); hideHint(); }
+  else vel = performance.now() - lastPT > 80 ? 0 : clamp(flingV, -2600, 2600);
+};
+cv.addEventListener('pointerup', endDrag); cv.addEventListener('pointercancel', endDrag);
+cv.addEventListener('wheel', e => { e.preventDefault(); V += (e.deltaX - e.deltaY) * .9 / k * (e.deltaMode === 1 ? 20 : 1); vel = 0; lastInteract = time; hideHint(); }, { passive: false });
+addEventListener('keydown', e => {
+  if (!$('#help').hidden) { if (e.key === 'Escape') closeHelp(); return; }
+  if (e.target.tagName === 'BUTTON' && (e.key === ' ' || e.key === 'Enter')) return;
+  if (e.key === 'ArrowLeft') { vel -= 500; lastInteract = time; e.preventDefault(); }
+  else if (e.key === 'ArrowRight') { vel += 500; lastInteract = time; e.preventDefault(); }
+  else if (e.key === ' ') { e.preventDefault(); setAuto(!auto); }
+});
+function setAuto(on) { auto = on; const b = $('#bPlay'); b.textContent = on ? '展卷中' : '已停驻'; b.setAttribute('aria-pressed', String(on)); if (on) lastInteract = -10; }
+function transition(cb) { fadeDir = 1; fadeCb = cb; if (reduce) { cb(); fadeDir = 0; fade = 0; forceRender = 2; } }
+$('#bPlay').onclick = () => setAuto(!auto);
+$('#bSpeed').onclick = () => { speedIdx = (speedIdx + 1) % 3; $('#bSpeed').textContent = '行速·' + SPEEDN[speedIdx]; if (!auto) setAuto(true); };
+$('#bSound').onclick = () => setSound(!A.on);
+seasonBtns.forEach((b, s) => b.onclick = () => {
+  const J = Jc(), target = s * SEASON + 3000; let Jt = J - mod(J + J_OFF, YEAR) + target; while (Jt < J + 600) Jt += YEAR;
+  transition(() => { V = -Jt - Wu / 2; vel = 0; parts.length = 0; flocks.length = 0; prevX = null; prevLx1 = null; bassCell = null; });
+});
+$('#bNew').onclick = () => transition(() => { newSeed(); V = -Wu; vel = 0; parts.length = 0; poemCache.clear(); });
+const help = $('#help');
+function closeHelp() { help.hidden = true; $('#bHelp').focus(); }
+$('#bHelp').onclick = () => { help.hidden = false; $('#bClose').focus(); };
+$('#bClose').onclick = closeHelp;
+help.addEventListener('click', e => { if (e.target === help) closeHelp(); });
+document.addEventListener('visibilitychange', () => { if (!A.ctx) return; if (document.hidden) A.ctx.suspend(); else if (A.on) A.ctx.resume(); });
+
+function clearWorld() { LAYERS.forEach(L => { L.objs.clear(); L.chunks.clear(); L.extra.clear(); }); poemCache.clear(); }
+function newSeed(s) {
+  SEED = s || (1 + Math.floor(Math.random() * 99998));
+  $('#juan').textContent = `第 ${SEED} 卷`;
+  clearWorld();
+  if (location.protocol !== 'file:') try { history.replaceState(null, '', '#' + SEED); } catch (_) {}
+}
+function resize() {
+  const r = stage.getBoundingClientRect(), keepJ = W ? Jc() : null;
+  DPR = Math.min(2, window.devicePixelRatio || 1); W = Math.max(1, r.width); H = Math.max(1, r.height);
+  cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
+  PAD = H < 500 ? 9 : 12; SY0 = PAD; SY1 = H - PAD; k = (SY1 - SY0) / 1000; Wu = W / k;
+  T_PANEL = clamp(Wu * .4, 260, 440); POEM_OFF = clamp(Wu * .35, 180, 650);
+  makeSprites(); makeVignette(); clearWorld();
+  V = keepJ === null ? -Wu : Math.min(-keepJ - Wu / 2, Vmax());
+  forceRender = 2;
+}
+let rzT = 0;
+addEventListener('resize', () => { clearTimeout(rzT); rzT = setTimeout(resize, 120); });
+
+const m = /^#(\d{1,5})$/.exec(location.hash);
+newSeed(m ? +m[1] : 0);
+resize();
+if (reduce) setAuto(false);
+if (document.fonts && document.fonts.load) document.fonts.load(`40px "Ma Shan Zheng"`, '无尽江山卧游明月').catch(() => {});
+updateHUD();
+render();
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
