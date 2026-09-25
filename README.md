@@ -2,7 +2,7 @@
 
 一卷永远画不完的水墨山水长卷。山、树、舟、题诗、四季昼夜与古琴声，全部由代码在浏览器里实时生成——没有一张图片，没有一段录音。
 
-**在线观看：** https://tombener.github.io/wujin-jiangshan/
+**在线观看：** https://retompi.com/wujin-jiangshan/
 
 ## 玩法
 
