@@ -5,6 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="一卷永远画不完的水墨山水长卷：山、树、舟、诗、四季昼夜与古琴声，全部由代码实时生成，山脊线就是琴谱。">
 <title>无尽江山</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#16110d">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Serif+SC:wght@400;600&display=swap" rel="stylesheet">
@@ -77,7 +81,7 @@ button[aria-pressed="true"]{background:var(--seal);border-color:var(--seal);colo
   </header>
   <main id="stage">
     <canvas id="cv" aria-label="一卷可以无限展开的山水长卷，每一笔都由代码实时绘制"></canvas>
-    <div id="hint">拖动画卷 · 点天空、水面、山林试试</div>
+    <div id="hint">点「听琴」开声音 · 拖动画卷 · 点天空、水面、山林</div>
   </main>
   <footer>
     <button id="bPlay" aria-pressed="true">展卷中</button>
@@ -1136,7 +1140,7 @@ function audioInit() {
   const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return false;
   const ac = new AC(); A.ctx = ac;
   A.master = ac.createGain(); A.master.gain.value = 0;
-  const comp = ac.createDynamicsCompressor(); comp.threshold.value = -16; comp.ratio.value = 3;
+  const comp = ac.createDynamicsCompressor(); comp.threshold.value = -20; comp.ratio.value = 4; comp.knee.value = 12;
   A.master.connect(comp); comp.connect(ac.destination);
   const sr = ac.sampleRate, irLen = Math.floor(sr * 3.4), ir = ac.createBuffer(2, irLen, sr);
   for (let ch = 0; ch < 2; ch++) { const d = ir.getChannelData(ch); for (let i = 0; i < irLen; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / irLen, 3.2); }
@@ -1240,12 +1244,25 @@ function musicTick() {
     if (Math.random() < .09 && L.night > .5 && (s === 1 || s === 2)) chirp(true);
   }
 }
+function silentWav() {
+  const sr = 8000, n = sr / 2, b = new ArrayBuffer(44 + n * 2), v = new DataView(b);
+  const w = (o, s) => { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
+  w(0, 'RIFF'); v.setUint32(4, 36 + n * 2, true); w(8, 'WAVE'); w(12, 'fmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+  v.setUint32(24, sr, true); v.setUint32(28, sr * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true); w(36, 'data'); v.setUint32(40, n * 2, true);
+  return URL.createObjectURL(new Blob([b], { type: 'audio/wav' }));
+}
+// iOS routes Web Audio through the ringer channel, so the silent switch mutes it; a playing <audio> element moves the page to the playback channel
+function unlockSession(on) {
+  try { if (navigator.audioSession) navigator.audioSession.type = on ? 'playback' : 'auto'; } catch (e) {}
+  try { if (!A.tag) { A.tag = new Audio(silentWav()); A.tag.loop = true; A.tag.setAttribute('playsinline', ''); } if (on) A.tag.play().catch(() => {}); else A.tag.pause(); } catch (e) {}
+}
 function setSound(on) {
+  unlockSession(on);
   if (on && !A.ctx && !audioInit()) return;
   A.on = on; const b = $('#bSound'); b.textContent = on ? '止琴' : '听琴'; b.setAttribute('aria-pressed', String(on)); b.classList.add('used');
   if (!A.ctx) return;
   const t = A.ctx.currentTime;
-  if (on) { A.ctx.resume(); A.master.gain.cancelScheduledValues(t); A.master.gain.setTargetAtTime(.9, t, .2); melLast = -9; bassCell = null; prevX = null; prevLx1 = null;
+  if (on) { A.ctx.resume(); A.master.gain.cancelScheduledValues(t); A.master.gain.setTargetAtTime(1.6, t, .2); melLast = -9; bassCell = null; prevX = null; prevLx1 = null;
     const m = MODES[seasonIdx(Jc())].d; [0, 2, 4, 7].forEach((d, q) => harmonic(pent(65, m + d), .1, q * .2, (q - 1.5) * .3)); }
   else { A.master.gain.cancelScheduledValues(t); A.master.gain.setTargetAtTime(0, t, .15); }
 }
@@ -1303,7 +1320,7 @@ function updateHUD() {
   seasonBtns.forEach((b, q) => b.setAttribute('aria-pressed', String(q === s)));
 }
 function hideHint() { $('#hint').classList.add('gone'); }
-setTimeout(hideHint, 9000);
+setTimeout(hideHint, 12000);
 cv.addEventListener('pointerdown', e => { try { cv.setPointerCapture(e.pointerId); } catch (_) {} dragging = true; downX = lastPX = e.clientX; downY = e.clientY; lastPT = performance.now(); moved = 0; flingV = 0; vel = 0; lastInteract = time; });
 cv.addEventListener('pointermove', e => {
   if (!dragging) return; const dx = e.clientX - lastPX, now = performance.now(), dtp = Math.max(1, now - lastPT) / 1000;
