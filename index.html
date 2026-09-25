@@ -1140,7 +1140,7 @@ function audioInit() {
   const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return false;
   const ac = new AC(); A.ctx = ac;
   A.master = ac.createGain(); A.master.gain.value = 0;
-  const comp = ac.createDynamicsCompressor(); comp.threshold.value = -20; comp.ratio.value = 4; comp.knee.value = 12;
+  const comp = ac.createDynamicsCompressor(); comp.threshold.value = -16; comp.ratio.value = 3;
   A.master.connect(comp); comp.connect(ac.destination);
   const sr = ac.sampleRate, irLen = Math.floor(sr * 3.4), ir = ac.createBuffer(2, irLen, sr);
   for (let ch = 0; ch < 2; ch++) { const d = ir.getChannelData(ch); for (let i = 0; i < irLen; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / irLen, 3.2); }
@@ -1262,7 +1262,7 @@ function setSound(on) {
   A.on = on; const b = $('#bSound'); b.textContent = on ? '止琴' : '听琴'; b.setAttribute('aria-pressed', String(on)); b.classList.add('used');
   if (!A.ctx) return;
   const t = A.ctx.currentTime;
-  if (on) { A.ctx.resume(); A.master.gain.cancelScheduledValues(t); A.master.gain.setTargetAtTime(1.6, t, .2); melLast = -9; bassCell = null; prevX = null; prevLx1 = null;
+  if (on) { A.ctx.resume(); A.master.gain.cancelScheduledValues(t); A.master.gain.setTargetAtTime(.9, t, .2); melLast = -9; bassCell = null; prevX = null; prevLx1 = null;
     const m = MODES[seasonIdx(Jc())].d; [0, 2, 4, 7].forEach((d, q) => harmonic(pent(65, m + d), .1, q * .2, (q - 1.5) * .3)); }
   else { A.master.gain.cancelScheduledValues(t); A.master.gain.setTargetAtTime(0, t, .15); }
 }
